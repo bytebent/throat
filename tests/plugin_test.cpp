@@ -124,8 +124,82 @@ static void editorTest()
     ed = nullptr;
 }
 
+// ---- presets: factory values, user files, the page's preset bar, project state ----
+static void presetTest()
+{
+    {
+        ThroatProcessor p;
+        auto& pm = p.presets;
+        check ("factory list starts with Init and has all phonation presets", pm.factoryNames().size() == 11 && pm.factoryNames()[0] == "Init");
+        setParam (p, "jitter", 0.9f);
+        pm.loadFactory ("Vocal Fry");
+        auto val = [&] (const char* id) { return p.apvts.getRawParameterValue (id)->load(); };
+        check ("factory preset sets its values and resets the rest to defaults",
+               std::abs (val ("creaky") - 0.85f) < 1e-4f && std::abs (val ("transpose") + 12.0f) < 1e-4f && val ("jitter") < 1e-6f && std::abs (val ("voicing") - 1.0f) < 1e-6f);
+        check ("not marked modified right after loading", ! pm.isModified());
+        setParam (p, "breathy", 0.3f);
+        check ("marked modified after a knob moves", pm.isModified());
+    }
+
+    ThroatProcessor p;
+    p.setPlayConfigDetails (0, 2, 48000, 480);
+    p.prepareToPlay (48000, 480);
+    std::unique_ptr<juce::AudioProcessorEditor> ed (p.createEditor());
+    ed->addToDesktop (0);
+    ed->setVisible (true);
+    auto& browser = dynamic_cast<ThroatEditor&> (*ed).getBrowser();
+    juce::AudioBuffer<float> buf (2, 480);
+    auto pump = [&] { juce::MidiBuffer m; buf.clear(); p.processBlock (buf, m); juce::MessageManager::getInstance()->runDispatchLoopUntil (10); };
+    for (int i = 0; i < 300; ++i) pump();
+    auto js = [&] (const juce::String& code) { auto r = evalJs (browser, code, pump); for (int i = 0; i < 25; ++i) pump(); return r; };
+    auto val = [&] (const char* id) { return p.apvts.getRawParameterValue (id)->load(); };
+
+    // save through the page: Save, type a name, Enter
+    setParam (p, "breathy", 0.42f); setParam (p, "growl", 0.25f); setParam (p, "mode", 1);
+    js ("document.getElementById('pSave').click(), 1");
+    js ("(()=>{const i=document.querySelector('#pName input'); i.value='My Voice'; i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true})); return 1;})()");
+    const auto file = PresetManager::userFolder().getChildFile ("My Voice.throatpreset");
+    check ("Save on the page writes a user preset file", file.existsAsFile(), file.getFullPathName());
+    check ("page shows the saved name without a change mark",
+           js ("document.getElementById('pTxt').textContent + '|' + document.getElementById('pMod').hidden").toString() == "My Voice|true");
+
+    // load a factory preset from the menu, then the user preset back
+    js ("(document.getElementById('pName').click(), [...document.querySelectorAll('#pMenu .it')].find(e=>e.textContent==='Whisper').click(), 1)");
+    check ("menu loads a factory preset", val ("voicing") < 1e-6f && std::abs (val ("tense") - 0.7f) < 1e-4f && val ("mode") < 0.5f);
+    js ("(document.getElementById('pName').click(), [...document.querySelectorAll('#pMenu .it')].find(e=>e.textContent==='My Voice').click(), 1)");
+    check ("menu loads the user preset with its values",
+           std::abs (val ("breathy") - 0.42f) < 1e-4f && std::abs (val ("growl") - 0.25f) < 1e-4f && val ("mode") > 0.5f && std::abs (val ("voicing") - 1.0f) < 1e-6f);
+
+    // change mark
+    setParam (p, "thin", 0.5f);
+    for (int i = 0; i < 10; ++i) pump();
+    check ("page marks the preset as changed", js ("String(document.getElementById('pMod').hidden)").toString() == "false");
+
+    // arrows: next from the last user preset wraps to Init, previous goes back
+    js ("(document.getElementById('pNext').click(), 1)");
+    check ("next arrow wraps to the first factory preset", p.presets.currentName() == "Init" && val ("breathy") < 1e-6f, p.presets.currentName());
+    js ("(document.getElementById('pPrev').click(), 1)");
+    check ("previous arrow goes back to the user preset", p.presets.currentName() == "My Voice", p.presets.currentName());
+
+    // the preset name is saved with the project
+    juce::MemoryBlock mb; p.getStateInformation (mb);
+    ThroatProcessor q; q.setStateInformation (mb.getData(), (int) mb.getSize());
+    check ("project state keeps the preset name", q.presets.currentName() == "My Voice" && q.presets.currentKind() == "user");
+
+    // delete from the menu
+    js ("(document.getElementById('pName').click(), [...document.querySelectorAll('#pMenu .it')].find(e=>e.textContent==='My Voice').querySelector('.del').click(), 1)");
+    check ("delete button removes the user preset file", ! file.existsAsFile());
+    const auto menuNow = js ("[document.getElementById('pMenu').hidden, [...document.querySelectorAll('#pMenu .it')].map(e=>e.textContent).join(',')].join('|')").toString();
+    check ("menu no longer lists it", ! menuNow.contains ("My Voice"), menuNow);
+    ed = nullptr;
+}
+
 int main()
 {
+    // keep test presets out of the real ~/Music
+    const auto home = juce::File::createTempFile ("throat-home");
+    home.createDirectory();
+    setenv ("HOME", home.getFullPathName().toRawUTF8(), 1);
     juce::ScopedJuceInitialiser_GUI init;
 
     {
@@ -185,6 +259,7 @@ int main()
     }
 
     editorTest();
+    presetTest();
 
     std::cout << (fails ? juce::String (fails) + " FAILED" : juce::String ("all passed")) << std::endl;
     return fails ? 1 : 0;

@@ -10,12 +10,14 @@ ThroatEditor::ThroatEditor (ThroatProcessor& p)
                    .withResourceProvider ([] (const juce::String& url) { return getResource (url); })
                    .withEventListener ("setParam", [this] (const juce::var& v) { onSetParam (v); })
                    .withEventListener ("gesture", [this] (const juce::var& v) { onGesture (v); })
-                   .withEventListener ("uiReady", [this] (const juce::var&) { needFullSync = true; }))
+                   .withEventListener ("presetAction", [this] (const juce::var& v) { onPresetAction (v); })
+                   .withEventListener ("uiReady", [this] (const juce::var&) { needFullSync = true; lastPresetKey = {}; }))
 {
     addAndMakeVisible (browser);
     browser.goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
     setSize (width, height);
     proc.editorOpen = true;
+    if (proc.stateRestored.exchange (false)) proc.presets.snapshot();
     startTimerHz (30);
 }
 
@@ -74,8 +76,47 @@ void ThroatEditor::onGesture (const juce::var& v)
     if (! begin && openGestures.erase (id) > 0) param->endChangeGesture();
 }
 
+void ThroatEditor::onPresetAction (const juce::var& v)
+{
+    auto& pm = proc.presets;
+    const auto action = v.getProperty ("action", {}).toString();
+    const auto name = v.getProperty ("name", {}).toString();
+    if (action == "load")
+    {
+        if (v.getProperty ("kind", {}).toString() == "user") pm.loadUser (name); else pm.loadFactory (name);
+    }
+    else if (action == "save") pm.saveUser (name);
+    else if (action == "delete") pm.deleteUser (name);
+    else if (action == "step") pm.step ((int) v.getProperty ("dir", 1));
+    lastPresetKey = {};   // resend the list
+}
+
+void ThroatEditor::sendPresets()
+{
+    auto& pm = proc.presets;
+    auto toVar = [] (const juce::StringArray& a) { juce::Array<juce::var> r; for (auto& s : a) r.add (s); return juce::var (r); };
+    auto* obj = new juce::DynamicObject();
+    obj->setProperty ("factory", toVar (pm.factoryNames()));
+    obj->setProperty ("user", toVar (pm.userNames()));
+    obj->setProperty ("current", pm.currentName());
+    obj->setProperty ("kind", pm.currentKind());
+    obj->setProperty ("modified", lastModified);
+    browser.emitEventIfBrowserIsVisible ("presets", juce::var (obj));
+}
+
 void ThroatEditor::timerCallback()
 {
+    // 0) preset name, list and the "changed since loading" mark
+    if (proc.stateRestored.exchange (false)) proc.presets.snapshot();
+    const bool modified = proc.presets.isModified();
+    const auto key = proc.presets.currentKind() + "/" + proc.presets.currentName();
+    if (modified != lastModified || key != lastPresetKey)
+    {
+        lastModified = modified;
+        lastPresetKey = key;
+        sendPresets();
+    }
+
     // 1) parameter values the page doesn't know yet (automation, presets, undo, first load)
     for (auto* p : proc.getParameters())
     {

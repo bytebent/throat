@@ -6,6 +6,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write   # to publish the "latest" download
+
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
@@ -96,3 +99,28 @@ jobs:
           unzip -q pluginval.zip
           ./pluginval.app/Contents/MacOS/pluginval --strictness-level 7 --validate-in-process --timeout-ms 300000 \
             "build/Throat_artefacts/Release/VST3/Throat.vst3"
+
+      - name: Package
+        run: |
+          ART="build/Throat_artefacts/Release"
+          PKG="Throat"
+          mkdir -p "dist/$PKG"
+          cp -R "$ART/AU/Throat.component" "$ART/VST3/Throat.vst3" "$ART/Standalone/Throat.app" "dist/$PKG/"
+          cp packaging/Install.command packaging/INSTALL.txt "dist/$PKG/"
+          chmod +x "dist/$PKG/Install.command"
+          cd dist && ditto -c -k --keepParent "$PKG" Throat-macOS.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Throat-macOS
+          path: dist/Throat-macOS.zip
+
+      - name: Publish as the "latest" download
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest dist/Throat-macOS.zip --prerelease \
+            --title "Latest build" \
+            --notes "Built from ${GITHUB_SHA::7}. Download Throat-macOS.zip, unzip it, and follow INSTALL.txt."

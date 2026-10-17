@@ -17,13 +17,12 @@ body{background:radial-gradient(circle at 1px 1px, rgba(0,0,0,.09) 1px, transpar
 .window{max-width:900px;margin:0 auto;
   background:repeating-linear-gradient(0deg, rgba(255,255,255,.55) 0 1px, rgba(255,255,255,0) 1px 2px, rgba(0,0,0,.035) 2px 3px, rgba(0,0,0,0) 3px 4px), var(--platinum);
   border:1px solid #7d7d86;border-radius:9px;box-shadow:0 1px 0 #fff inset, 0 12px 32px rgba(0,0,0,.22);overflow:hidden}
-.titlebar{display:flex;align-items:center;gap:10px;padding:7px 12px 6px;background:linear-gradient(#f6f6f8,#d6d6db);border-bottom:1px solid #8e8e96}
-.closebox{width:12px;height:12px;border:1px solid #6e6e78;border-radius:2px;background:linear-gradient(#fff,#cfcfd5);flex:none}
-.titlebar .lines{flex:1;height:9px;background:repeating-linear-gradient(0deg,#9c9ca4 0 1px,transparent 1px 3px);opacity:.6;min-width:12px}
-.titlebar .t{font-weight:700;font-size:12px;white-space:nowrap}
-.mark{width:20px;height:16px;border-radius:3px;background:var(--graphite);box-shadow:0 0 0 1px rgba(0,0,0,.35);position:relative;flex:none;overflow:hidden}
-.mark::after{content:"";position:absolute;left:0;right:0;top:6px;height:4px;background:var(--red)}
-.titlebar .ver{color:var(--ink-soft);font-size:11px;white-space:nowrap}
+.titlebar{display:flex;align-items:center;gap:12px;padding:9px 14px 8px;background:linear-gradient(#f6f6f8,#d6d6db);border-bottom:1px solid #8e8e96}
+.mark{width:22px;height:18px;border-radius:3px;background:var(--graphite);box-shadow:0 0 0 1px rgba(0,0,0,.35);position:relative;flex:none;overflow:hidden}
+.mark::after{content:"";position:absolute;left:0;right:0;top:7px;height:4px;background:var(--red)}
+.titlebar h1{margin:0;font-size:15px;font-weight:700;letter-spacing:-.2px}
+.titlebar .sub{color:var(--ink-soft);font-size:11px}
+.titlebar .sub .ver{margin-left:6px;color:#7a7a84}
 .body{padding:14px 18px 16px}
 
 /* screen */
@@ -112,7 +111,11 @@ legend .dot{width:8px;height:8px;border-radius:50%;background:var(--graphite);bo
 </head>
 <body>
 <div class="window" role="application" aria-label="Throat test bench">
-  <div class="titlebar"><span class="closebox"></span><span class="lines"></span><span class="mark" aria-hidden="true"></span><span class="t">Throat</span><span class="lines"></span><span class="ver">v0.1 · Bytebent Audio</span></div>
+  <div class="titlebar">
+    <span class="mark" aria-hidden="true"></span>
+    <h1>Throat</h1>
+    <span class="sub">Bytebent Audio<span class="ver">bench</span></span>
+  </div>
   <div class="body">
     <div class="screen">
       <div class="views">

@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "ThroatDSP.h"
+#include "PresetManager.h"
 #include <array>
 #include <atomic>
 
@@ -46,6 +47,8 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     juce::AudioProcessorValueTreeState apvts;
+    PresetManager presets { apvts };              // message thread only
+    std::atomic<bool> stateRestored { false };    // set when the host loads a project; the editor re-snapshots
     ThroatView view;
     std::atomic<bool> editorOpen { false };
     std::atomic<double> currentSampleRate { 48000.0 };

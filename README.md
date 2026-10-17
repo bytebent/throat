@@ -7,8 +7,13 @@ Each cycle of vocal-fold vibration is an LF (Liljencrants–Fant) glottal pulse,
 noise that pulses with every opening, per-cycle irregularity and subharmonics. The knobs blend
 freely between modal, breathy, pressed, creaky, falsetto-like, growled and voiceless sound.
 
-**Status:** DSP core, browser test bench and a JUCE instrument (AU, VST3, Standalone) with its
-web interface. The downloadable Mac build comes next.
+Formats: **AU and VST3 instrument for macOS** (Apple Silicon + Intel), plus a standalone app.
+
+## Download and install
+
+Grab `Throat-macOS.zip` from the
+[latest build](https://github.com/bytebent/throat/releases/tag/latest),
+unzip it and follow `INSTALL.txt` (right-click `Install.command` → Open).
 
 ## Controls
 
@@ -27,6 +32,9 @@ web interface. The downloadable Mac build comes next.
 | Envelope | Attack / Decay / Sustain / Release | Amplitude envelope. |
 | Output | Source | Glottal flow, or its derivative (brighter). |
 | | Volume | −48 to +6 dB. |
+| Presets | ◀ name ▶, Save | 11 factory presets; your own are saved to `~/Music/Bytebent/Throat/Presets`. A `*` marks changes since loading. |
+
+The plugin adds 32 samples of latency, which it reports to the host.
 
 ## Test bench
 
@@ -43,6 +51,8 @@ Rebuild it after changing the engine: `node tools/bench/build.js`.
 - `source/ThroatDSP.h` — C++ port, real-time safe, no JUCE dependency
 - `source/PluginProcessor.*` — JUCE instrument wrapper (MIDI in, mono/stereo out, 32 samples latency)
 - `source/PluginEditor.*`, `ui/index.html` — the interface, shown in a web view (also opens in a browser as a preview)
+- `source/PresetManager.h` — factory and user presets
+- `packaging/` — installer script and instructions for the Mac download
 - `tests/` — reference tests, test filter tests, and the C++ vs reference comparison
 - `tools/throat.html` — browser test bench (built from `tools/bench/`)
 

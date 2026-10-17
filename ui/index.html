@@ -17,13 +17,40 @@ body{background:radial-gradient(circle at 1px 1px, rgba(0,0,0,.09) 1px, transpar
 .window{width:100%;margin:0;border-radius:0;border:0;
   background:repeating-linear-gradient(0deg, rgba(255,255,255,.55) 0 1px, rgba(255,255,255,0) 1px 2px, rgba(0,0,0,.035) 2px 3px, rgba(0,0,0,0) 3px 4px), var(--platinum);
   border:1px solid #7d7d86;border-radius:9px;box-shadow:0 1px 0 #fff inset, 0 12px 32px rgba(0,0,0,.22);overflow:hidden}
-.titlebar{display:flex;align-items:center;gap:10px;padding:7px 12px 6px;background:linear-gradient(#f6f6f8,#d6d6db);border-bottom:1px solid #8e8e96}
-.closebox{width:12px;height:12px;border:1px solid #6e6e78;border-radius:2px;background:linear-gradient(#fff,#cfcfd5);flex:none}
-.titlebar .lines{flex:1;height:9px;background:repeating-linear-gradient(0deg,#9c9ca4 0 1px,transparent 1px 3px);opacity:.6;min-width:12px}
-.titlebar .t{font-weight:700;font-size:12px;white-space:nowrap}
-.mark{width:20px;height:16px;border-radius:3px;background:var(--graphite);box-shadow:0 0 0 1px rgba(0,0,0,.35);position:relative;flex:none;overflow:hidden}
-.mark::after{content:"";position:absolute;left:0;right:0;top:6px;height:4px;background:var(--red)}
-.titlebar .ver{color:var(--ink-soft);font-size:11px;white-space:nowrap}
+.titlebar{display:flex;align-items:center;gap:12px;padding:9px 14px 8px;background:linear-gradient(#f6f6f8,#d6d6db);border-bottom:1px solid #8e8e96;position:relative;z-index:5}
+.mark{width:22px;height:18px;border-radius:3px;background:var(--graphite);box-shadow:0 0 0 1px rgba(0,0,0,.35);position:relative;flex:none;overflow:hidden}
+.mark::after{content:"";position:absolute;left:0;right:0;top:7px;height:4px;background:var(--red)}
+.titlebar h1{margin:0;font-size:15px;font-weight:700;letter-spacing:-.2px}
+.titlebar .sub{color:var(--ink-soft);font-size:11px}
+.titlebar .sub .ver{margin-left:6px;color:#7a7a84;font-variant-numeric:tabular-nums}
+.titlebar .spacer{flex:1}
+
+/* presets */
+.presets{display:flex;align-items:center;gap:4px;position:relative}
+.parrow{width:22px;height:22px;border:1px solid #7d7d86;border-radius:4px;cursor:pointer;padding:0;position:relative;
+  background:linear-gradient(#fff,#d8d8dd 48%,#c4c4ca 52%,#e6e6ea);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.parrow::after{content:"";position:absolute;top:6px;border:5px solid transparent}
+.parrow.prev::after{left:4px;border-right:6px solid #333}
+.parrow.next::after{left:7px;border-left:6px solid #333}
+.pname{width:190px;height:22px;display:flex;align-items:center;gap:6px;padding:0 24px 0 9px;border-radius:4px;cursor:pointer;position:relative;
+  background:var(--inset);box-shadow:inset 0 1px 2px rgba(0,0,0,.3);border:1px solid #9c9ca4;font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden}
+.pname::after{content:"";position:absolute;right:8px;top:8px;border:4px solid transparent;border-top:5px solid #333}
+.pname .txt{overflow:hidden;text-overflow:ellipsis}
+.pname .mod{color:var(--red);font-weight:700}
+.pname input{font:700 12px var(--ui);border:0;background:transparent;outline:none;width:100%;padding:0}
+.presets .gel{padding:3px 14px;font-size:11px}
+.pmenu{position:absolute;top:28px;left:26px;width:230px;max-height:420px;overflow-y:auto;background:var(--platinum-hi);border:1px solid #7d7d86;border-radius:5px;
+  box-shadow:0 8px 20px rgba(0,0,0,.3);padding:4px 0;z-index:10;font-size:12px}
+.pmenu[hidden]{display:none}
+.pmenu .hd{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-soft);padding:6px 10px 3px}
+.pmenu .it{display:flex;align-items:center;padding:3px 10px;cursor:pointer}
+.pmenu .it span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pmenu .it:hover,.pmenu .it.cur{background:var(--blue);color:#fff}
+.pmenu .del{width:16px;height:16px;border:0;border-radius:3px;background:transparent;cursor:pointer;position:relative;flex:none;opacity:.55}
+.pmenu .del::before,.pmenu .del::after{content:"";position:absolute;left:3px;right:3px;top:7px;height:2px;background:currentColor;transform:rotate(45deg)}
+.pmenu .del::after{transform:rotate(-45deg)}
+.pmenu .del:hover{opacity:1}
+.pmenu .empty{padding:3px 10px;color:var(--ink-soft)}
 .body{padding:14px 18px 16px}
 
 /* screen */
@@ -64,6 +91,7 @@ legend .dot{width:8px;height:8px;border-radius:50%;background:var(--graphite);bo
 .seg button{font:700 11px var(--ui);border:0;padding:4px 12px;cursor:pointer;color:#222;background:linear-gradient(#fff,#d8d8dd 48%,#c4c4ca 52%,#e6e6ea)}
 .seg button+button{border-left:1px solid #9c9ca4}
 .seg button[aria-pressed="true"]{color:#fff;text-shadow:0 -1px 0 rgba(0,0,0,.3);background:linear-gradient(#8fd8f7,var(--blue) 48%,#0086c0 52%,#38b8ea)}
+.segrow{display:flex;align-items:center;justify-content:center;gap:10px;font-size:11px;font-weight:700;margin-top:8px}
 .segwrap{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;font-weight:700;padding-bottom:4px}
 
 .gel{display:inline-flex;align-items:center;padding:6px 18px;border-radius:999px;font:700 12px var(--ui);color:#fff;border:1px solid var(--blue-dk);position:relative;cursor:pointer;
@@ -87,7 +115,19 @@ html,body{height:100%}
 </head>
 <body>
 <div class="window" role="application" aria-label="Throat">
-  <div class="titlebar"><span class="closebox"></span><span class="lines"></span><span class="mark" aria-hidden="true"></span><span class="t">Throat</span><span class="lines"></span><span class="ver" id="ver">v0.1 &#183; Bytebent Audio</span></div>
+  <div class="titlebar">
+    <span class="mark" aria-hidden="true"></span>
+    <h1>Throat</h1>
+    <span class="sub">Bytebent Audio<span class="ver" id="ver"></span></span>
+    <span class="spacer"></span>
+    <div class="presets">
+      <button class="parrow prev" id="pPrev" type="button" aria-label="Previous preset"></button>
+      <div class="pname" id="pName" tabindex="0" role="button" aria-haspopup="listbox" aria-label="Preset"><span class="txt" id="pTxt">Init</span><span class="mod" id="pMod" hidden>*</span></div>
+      <button class="parrow next" id="pNext" type="button" aria-label="Next preset"></button>
+      <button class="gel grey" id="pSave" type="button">Save</button>
+      <div class="pmenu" id="pMenu" role="listbox" hidden></div>
+    </div>
+  </div>
   <div class="body">
     <div class="screen">
       <div class="views">
@@ -105,9 +145,9 @@ html,body{height:100%}
     <div class="rows">
       <fieldset><legend><span class="dot" style="background:var(--red)"></span>Phonation</legend><div class="knobs" id="g-phon"></div></fieldset>
       <fieldset><legend><span class="dot"></span>Irregularity</legend><div class="knobs" id="g-irr"></div></fieldset>
-      <fieldset><legend><span class="dot"></span>Pitch</legend><div class="knobs" id="g-pitch">
-        <div class="segwrap">Voices<div class="seg" id="segMode"><button type="button" data-v="0">Mono</button><button type="button" data-v="1">Poly</button></div></div>
-      </div></fieldset>
+      <fieldset><legend><span class="dot"></span>Pitch</legend><div class="knobs" id="g-pitch"></div>
+        <div class="segrow">Voices<div class="seg" id="segMode"><button type="button" data-v="0">Mono</button><button type="button" data-v="1">Poly</button></div></div>
+      </fieldset>
       <fieldset><legend><span class="dot"></span>Envelope</legend><div class="knobs" id="g-env"></div></fieldset>
       <fieldset><legend><span class="dot"></span>Output</legend><div class="knobs" id="g-out">
         <div class="segwrap">Source<div class="seg" id="segSrc"><button type="button" data-v="0">Flow</button><button type="button" data-v="1">Derivative</button></div></div>
@@ -149,8 +189,12 @@ html,body{height:100%}
     on: (name, cb) => juce.addEventListener(name, cb),
     ready: () => juce.emitEvent('uiReady', {}),
   } : { set() {}, begin() {}, end() {}, on() {}, ready() {} };
-  const initData = window.__JUCE__ && window.__JUCE__.initialisationData;
-  if (initData && initData.version) document.getElementById('ver').textContent = 'v' + initData.version + ' \u00b7 Bytebent Audio';
+  // version comes from the plugin build (CMake project version), so it can't go stale
+  (() => {
+    const d = window.__JUCE__ && window.__JUCE__.initialisationData && window.__JUCE__.initialisationData.version;
+    const v = Array.isArray(d) ? d[0] : d;
+    document.getElementById('ver').textContent = v ? 'v' + v : 'preview';
+  })();
 
   const state = { mode: 0, source: 0 };
 
@@ -175,8 +219,7 @@ html,body{height:100%}
     dial.setAttribute('aria-label', s.name);
     if (s.c) dial.style.setProperty('--c', s.c);
     const host = document.getElementById(s.g);
-    const seg = host.querySelector('.segwrap');
-    if (seg && s.id !== 'volume') host.insertBefore(el, seg); else host.appendChild(el);
+    host.appendChild(el);
     const k = { s, dial, norm: toNorm(s, s.def) };
     k.show = n => {
       k.norm = Math.min(1, Math.max(0, n));
@@ -241,6 +284,84 @@ html,body{height:100%}
     if (knobs[e.id]) knobs[e.id].show(e.value);
     else if (segs[e.id]) segs[e.id](e.value >= 0.5 ? 1 : 0);
   });
+
+  /* ---------- presets (stored by the plugin; see source/PresetManager.h) ---------- */
+  const pName = document.getElementById('pName'), pTxt = document.getElementById('pTxt'), pMod = document.getElementById('pMod');
+  const pMenu = document.getElementById('pMenu'), pSave = document.getElementById('pSave');
+  let presets = { factory: [], user: [], current: 'Init', kind: 'factory', modified: false };
+  let editing = false;
+  const action = a => juce && juce.emitEvent('presetAction', a);
+  function showPresets() {
+    if (editing) return;
+    pTxt.textContent = presets.current || 'Init';
+    pMod.hidden = !presets.modified;
+  }
+  Host.on('presets', m => { presets = m; showPresets(); if (!pMenu.hidden) buildMenu(); });
+  function buildMenu() {
+    pMenu.textContent = '';
+    const section = (title, names, kind) => {
+      const hd = document.createElement('div'); hd.className = 'hd'; hd.textContent = title; pMenu.appendChild(hd);
+      if (!names.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'None saved'; pMenu.appendChild(e); }
+      for (const name of names) {
+        const it = document.createElement('div');
+        it.className = 'it' + (name === presets.current && kind === presets.kind ? ' cur' : '');
+        it.setAttribute('role', 'option');
+        const t = document.createElement('span'); t.textContent = name; it.appendChild(t);
+        if (kind === 'user') {
+          const del = document.createElement('button'); del.className = 'del'; del.type = 'button'; del.setAttribute('aria-label', 'Delete ' + name);
+          del.addEventListener('click', e => { e.stopPropagation(); action({ action: 'delete', name }); });
+          it.appendChild(del);
+        }
+        it.addEventListener('click', () => { closeMenu(); action({ action: 'load', kind, name }); });
+        pMenu.appendChild(it);
+      }
+    };
+    section('Factory', presets.factory, 'factory');
+    section('User', presets.user, 'user');
+  }
+  function openMenu() { if (editing) return; buildMenu(); pMenu.hidden = false; }
+  function closeMenu() { pMenu.hidden = true; }
+  pName.addEventListener('click', e => { e.stopPropagation(); pMenu.hidden ? openMenu() : closeMenu(); });
+  pName.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pMenu.hidden ? openMenu() : closeMenu(); } });
+  document.addEventListener('click', e => { if (!pMenu.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  document.getElementById('pPrev').addEventListener('click', () => action({ action: 'step', dir: -1 }));
+  document.getElementById('pNext').addEventListener('click', () => action({ action: 'step', dir: 1 }));
+  // Save: the name box becomes a text field; Enter saves, Escape or clicking away cancels
+  pSave.addEventListener('click', e => {
+    e.stopPropagation();
+    if (editing) { commit(); return; }
+    closeMenu();
+    editing = true;
+    const input = document.createElement('input');
+    input.value = presets.kind === 'user' ? presets.current : '';
+    input.placeholder = 'Preset name';
+    input.maxLength = 60;
+    pTxt.hidden = true; pMod.hidden = true;
+    pName.appendChild(input);
+    input.focus(); input.select();
+    input.addEventListener('keydown', ev => {
+      ev.stopPropagation();
+      if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
+      else if (ev.key === 'Escape') { ev.preventDefault(); cancel(); }
+    });
+    input.addEventListener('blur', () => setTimeout(() => { if (editing) cancel(); }, 150));
+    input.addEventListener('click', ev => ev.stopPropagation());
+    pSave.textContent = 'OK';
+  });
+  function endEdit() {
+    const input = pName.querySelector('input');
+    if (input) input.remove();
+    pTxt.hidden = false; editing = false; pSave.textContent = 'Save';
+    showPresets();
+  }
+  function commit() {
+    const input = pName.querySelector('input');
+    const name = input ? input.value.trim() : '';
+    endEdit();
+    if (name) action({ action: 'save', name });
+  }
+  function cancel() { endEdit(); }
 
   /* ---------- live view ---------- */
   const glot = document.getElementById('glot'), spec = document.getElementById('spec');

@@ -1,0 +1,24 @@
+Throat for macOS (AU + VST3 instrument, Apple Silicon and Intel)
+
+Easiest way
+  1. Right-click "Install.command" and choose Open (a plain double-click may be
+     blocked the first time, because the script isn't from an identified developer).
+  2. Click Open in the warning, and wait for "Installed" in the Terminal window.
+
+Or by hand, in Terminal, from inside this folder:
+  cp -R "Throat.component" ~/Library/Audio/Plug-Ins/Components/
+  cp -R "Throat.vst3" ~/Library/Audio/Plug-Ins/VST3/
+  xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/Components/"Throat.component" ~/Library/Audio/Plug-Ins/VST3/"Throat.vst3"
+
+Then in Ableton Live 11: Preferences > Plug-Ins > turn on "Use Audio Units"
+and/or "Use VST3 Plug-In System Folders" > Rescan. Throat appears under
+Plug-Ins > Bytebent Audio. Drop it on a MIDI track. Use either the AU or the
+VST3, not both.
+
+Presets you save are kept in ~/Music/Bytebent/Throat/Presets.
+
+"Throat.app" is a standalone version for quick tests outside Ableton.
+
+The xattr step is needed because the plugin isn't signed with a paid Apple
+developer certificate; it removes the "downloaded from the internet" flag so
+macOS lets Ableton load it.

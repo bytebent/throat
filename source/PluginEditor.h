@@ -16,13 +16,15 @@ public:
     void resized() override;
     void paint (juce::Graphics&) override;
 
-    static constexpr int width = 880, height = 580;
+    static constexpr int width = 880, height = 590;
     juce::WebBrowserComponent& getBrowser() { return browser; }   // for tests
 
 private:
     void timerCallback() override;
     void onSetParam (const juce::var&);
     void onGesture (const juce::var&);
+    void onPresetAction (const juce::var&);
+    void sendPresets();
     static std::optional<juce::WebBrowserComponent::Resource> getResource (const juce::String& url);
 
     ThroatProcessor& proc;
@@ -31,6 +33,8 @@ private:
     std::map<juce::String, float> lastSent;
     std::set<juce::String> openGestures;
     bool needFullSync = true;
+    bool lastModified = false;
+    juce::String lastPresetKey;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ThroatEditor)
 };

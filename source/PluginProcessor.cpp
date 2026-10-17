@@ -164,7 +164,10 @@ void ThroatProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     if (auto xml = getXmlFromBinary (data, sizeInBytes))
         if (xml->hasTagName (apvts.state.getType()))
+        {
             apvts.replaceState (juce::ValueTree::fromXml (*xml));
+            stateRestored = true;
+        }
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
