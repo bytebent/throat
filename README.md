@@ -7,7 +7,8 @@ Each cycle of vocal-fold vibration is an LF (Liljencrants–Fant) glottal pulse,
 noise that pulses with every opening, per-cycle irregularity and subharmonics. The knobs blend
 freely between modal, breathy, pressed, creaky, falsetto-like, growled and voiceless sound.
 
-**Status:** DSP core and browser test bench. The JUCE plugin (AU/VST3) is in progress.
+**Status:** DSP core, browser test bench and a JUCE instrument (AU, VST3, Standalone) with a plain
+editor. The web interface and the downloadable Mac build come next.
 
 ## Controls
 
@@ -40,6 +41,7 @@ Rebuild it after changing the engine: `node tools/bench/build.js`.
 
 - `reference/throat-engine.js` — the reference engine; defines the sound
 - `source/ThroatDSP.h` — C++ port, real-time safe, no JUCE dependency
+- `source/PluginProcessor.*` — JUCE instrument wrapper (MIDI in, mono/stereo out, 32 samples latency)
 - `tests/` — reference tests, test filter tests, and the C++ vs reference comparison
 - `tools/throat.html` — browser test bench (built from `tools/bench/`)
 
@@ -49,9 +51,19 @@ Rebuild it after changing the engine: `node tools/bench/build.js`.
 node tests/engine-test.js
 node tests/filter-test.js
 g++ -O2 -std=c++17 -ffp-contract=off -o dsp_cli tests/dsp_cli.cpp && node tests/compare.js ./dsp_cli
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --target plugin_test
+./build/plugin_test_artefacts/Release/plugin_test
 ```
 
-GitHub Actions runs all of them on every push.
+GitHub Actions runs all of them on every push, and builds and validates the Mac plugin
+(universal binary, auval, pluginval at strictness 7).
+
+## Building on a Mac
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+cmake --build build --config Release --target Throat_AU Throat_VST3 Throat_Standalone
+```
 
 ## License note
 

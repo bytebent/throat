@@ -29,3 +29,69 @@ jobs:
         run: node tests/compare.js ./dsp_cli
       - name: Bench page is up to date
         run: node tools/bench/build.js && git diff --exit-code tools/throat.html
+
+  plugin-test:
+    name: Plugin wrapper test (Linux)
+    runs-on: ubuntu-latest
+    needs: dsp-tests
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install JUCE dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q ninja-build libasound2-dev libx11-dev libxrandr-dev libxinerama-dev \
+            libxcursor-dev libxcomposite-dev libfreetype-dev libfontconfig1-dev libgl1-mesa-dev xvfb
+      - name: Cache JUCE download
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: juce-8.0.15-${{ runner.os }}
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --target plugin_test -j 4
+      - name: Plugin sounds like the engine, parameters and state are right
+        run: xvfb-run -a ./build/plugin_test_artefacts/Release/plugin_test
+
+  macos:
+    name: macOS plugin (AU + VST3, universal)
+    runs-on: macos-14
+    needs: dsp-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache JUCE download
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: juce-8.0.15-${{ runner.os }}
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+
+      - name: Build
+        run: cmake --build build --config Release --target Throat_AU Throat_VST3 Throat_Standalone -j 4
+
+      - name: Sign (ad-hoc, so macOS will load it)
+        run: |
+          ART="build/Throat_artefacts/Release"
+          for b in "$ART/AU/Throat.component" "$ART/VST3/Throat.vst3" "$ART/Standalone/Throat.app"; do
+            codesign --force --deep --sign - "$b"
+            codesign --verify --verbose "$b"
+          done
+          lipo -info "$ART/VST3/Throat.vst3/Contents/MacOS/Throat"
+
+      - name: Validate AU (auval)
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R "build/Throat_artefacts/Release/AU/Throat.component" ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar 2>/dev/null || true
+          sleep 2
+          auval -v aumu Thrt Bytb
+
+      - name: Validate VST3 (pluginval)
+        run: |
+          curl -sSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          unzip -q pluginval.zip
+          ./pluginval.app/Contents/MacOS/pluginval --strictness-level 7 --validate-in-process --timeout-ms 300000 \
+            "build/Throat_artefacts/Release/VST3/Throat.vst3"
