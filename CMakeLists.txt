@@ -32,23 +32,28 @@ juce_add_plugin(Throat
     NEEDS_MIDI_INPUT            TRUE
     NEEDS_MIDI_OUTPUT           FALSE
     IS_MIDI_EFFECT              FALSE
-    NEEDS_WEB_BROWSER           FALSE
+    NEEDS_WEB_BROWSER           TRUE
     NEEDS_CURL                  FALSE
     AU_MAIN_TYPE                kAudioUnitType_MusicDevice
     VST3_CATEGORIES             Instrument Synth
     COPY_PLUGIN_AFTER_BUILD     FALSE)
 
+juce_add_binary_data(ThroatUI SOURCES ui/index.html)
+
 target_sources(Throat PRIVATE
-    source/PluginProcessor.cpp)
+    source/PluginProcessor.cpp
+    source/PluginEditor.cpp)
 
 target_compile_definitions(Throat PUBLIC
-    JUCE_WEB_BROWSER=0
+    JUCE_WEB_BROWSER=1
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0)
 
 target_link_libraries(Throat
     PRIVATE
+        ThroatUI
         juce::juce_audio_utils
+        juce::juce_gui_extra
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
@@ -58,7 +63,7 @@ target_link_libraries(Throat
 add_executable(dsp_cli tests/dsp_cli.cpp)
 
 # Wrapper test: processor vs bare engine, parameters, state (tests/plugin_test.cpp).
-juce_add_console_app(plugin_test PRODUCT_NAME "plugin_test")
-target_sources(plugin_test PRIVATE tests/plugin_test.cpp source/PluginProcessor.cpp)
-target_compile_definitions(plugin_test PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JucePlugin_Name="Throat")
-target_link_libraries(plugin_test PRIVATE juce::juce_audio_utils PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+juce_add_console_app(plugin_test PRODUCT_NAME "plugin_test" NEEDS_WEB_BROWSER TRUE)
+target_sources(plugin_test PRIVATE tests/plugin_test.cpp source/PluginProcessor.cpp source/PluginEditor.cpp)
+target_compile_definitions(plugin_test PRIVATE JUCE_WEB_BROWSER=1 JUCE_USE_CURL=0 JUCE_MODAL_LOOPS_PERMITTED=1 JucePlugin_Name="Throat" JucePlugin_VersionString="${PROJECT_VERSION}")
+target_link_libraries(plugin_test PRIVATE ThroatUI juce::juce_audio_utils juce::juce_gui_extra PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)

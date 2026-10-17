@@ -2,6 +2,7 @@
 // notes and settings, map every parameter correctly, and restore its state.
 // Build target: plugin_test (see CMakeLists.txt).
 #include "../source/PluginProcessor.h"
+#include "../source/PluginEditor.h"
 #include <iostream>
 
 namespace th = bytebent::throat;
@@ -13,6 +14,7 @@ static void check (const char* name, bool ok, const juce::String& info = {})
 }
 
 struct Ev { int at; int note; int vel; };   // vel 0 = note off
+static bool exactlyZero (double d) { return d >= 0.0 && d <= 0.0; }   // -1 means the render was silent
 
 static void setParam (ThroatProcessor& p, const char* id, float value)
 {
@@ -62,6 +64,66 @@ static double compare (ThroatProcessor& p, const std::vector<Ev>& evs, int total
     return energy > 1e-6 ? maxd : -1.0;
 }
 
+
+// ---- the web interface, end to end: host → page and page → host ----
+static juce::var evalJs (juce::WebBrowserComponent& b, const juce::String& js, std::function<void()> pump)
+{
+    juce::var result; bool done = false;
+    b.evaluateJavascript (js, [&] (juce::WebBrowserComponent::EvaluationResult r) {
+        if (auto* v = r.getResult()) result = *v;
+        done = true; });
+    for (int i = 0; i < 200 && ! done; ++i) pump();
+    return result;
+}
+
+static void editorTest()
+{
+    ThroatProcessor p;
+    p.setPlayConfigDetails (0, 2, 48000, 480);
+    p.prepareToPlay (48000, 480);
+    std::unique_ptr<juce::AudioProcessorEditor> ed (p.createEditor());
+    ed->addToDesktop (0);
+    ed->setVisible (true);
+    auto& browser = dynamic_cast<ThroatEditor&> (*ed).getBrowser();
+
+    juce::AudioBuffer<float> buf (2, 480);
+    bool noteSent = false;
+    auto pump = [&]
+    {
+        juce::MidiBuffer midi;
+        if (! noteSent) { midi.addEvent (juce::MidiMessage::noteOn (1, 45, (juce::uint8) 100), 0); noteSent = true; }
+        buf.clear();
+        p.processBlock (buf, midi);                       // 10 ms of audio per pump
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (10);
+    };
+    for (int i = 0; i < 300; ++i) pump();                 // page loads, frames start flowing
+
+    setParam (p, "breathy", 0.6f);
+    for (int i = 0; i < 30; ++i) pump();
+    const auto breathyShown = evalJs (browser, "[...document.querySelectorAll('.knob')].find(k=>k.querySelector('.name').textContent==='Breathy').querySelector('.val').textContent", pump).toString();
+    check ("page shows a host-side parameter change", breathyShown == "60%", breathyShown);
+
+    const auto ro = evalJs (browser, "[document.getElementById('roF0').textContent, document.getElementById('roVo').textContent].join('|')", pump).toString();
+    check ("live view receives frames (pitch and voice count)", ro.startsWith ("110.0 Hz|1"), ro);
+
+    evalJs (browser, "(()=>{const d=[...document.querySelectorAll('.knob')].find(k=>k.querySelector('.name').textContent==='Tense').querySelector('.dial'); for(let i=0;i<5;i++) d.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true})); return 1;})()", pump);
+    evalJs (browser, "(document.querySelector('#segSrc button[data-v=\"1\"]').click(), document.querySelector('#segMode button[data-v=\"1\"]').click(), 1)", pump);
+    for (int i = 0; i < 30; ++i) pump();
+    const float tense = p.apvts.getRawParameterValue ("tense")->load();
+    check ("turning a knob on the page changes the plugin parameter", std::abs (tense - 0.1f) < 1e-4f, juce::String (tense));
+    check ("page switches set Source and Voice mode",
+           p.apvts.getRawParameterValue ("source")->load() > 0.5f && p.apvts.getRawParameterValue ("mode")->load() > 0.5f);
+    if (std::getenv ("THROAT_HOLD") != nullptr)            // keep the window up for a screenshot
+    {
+        setParam (p, "growl", 0.3f);
+        juce::MidiBuffer chord;
+        for (int nn : { 45, 52, 57 }) chord.addEvent (juce::MidiMessage::noteOn (1, nn, (juce::uint8) 100), 0);
+        buf.clear(); p.processBlock (buf, chord);
+        for (int i = 0; i < 600; ++i) pump();
+    }
+    ed = nullptr;
+}
+
 int main()
 {
     juce::ScopedJuceInitialiser_GUI init;
@@ -69,7 +131,7 @@ int main()
     {
         ThroatProcessor p;
         const double d = compare (p, { { 1000, 48, 100 }, { 20000, 48, 0 } }, 40000, 512, 48000);
-        check ("defaults: plugin output = engine output, both channels", d == 0.0, "max diff " + juce::String (d));
+        check ("defaults: plugin output = engine output, both channels", exactlyZero (d), "max diff " + juce::String (d));
     }
     {
         ThroatProcessor p;
@@ -78,7 +140,7 @@ int main()
         setParam (p, "attack", 0.4f); setParam (p, "release", 1.5f); setParam (p, "volume", 2.5f);
         setParam (p, "source", 1); setParam (p, "jitter", 0.3f);
         const double d = compare (p, { { 300, 48, 90 }, { 7000, 55, 120 }, { 15000, 55, 0 }, { 26000, 48, 0 } }, 60000, 333, 44100);
-        check ("mono with glide, many knobs, odd block size: identical to engine", d == 0.0, "max diff " + juce::String (d));
+        check ("mono with glide, many knobs, odd block size: identical to engine", exactlyZero (d), "max diff " + juce::String (d));
     }
     {
         ThroatProcessor p;
@@ -88,7 +150,7 @@ int main()
         for (int note : { 48, 52, 55, 59, 62, 64, 67, 71, 74 }) evs.push_back ({ 100 + 37 * n++, note, 100 });
         for (int note : { 48, 52, 55, 59, 62, 64, 67, 71, 74 }) evs.push_back ({ 30000 + 11 * n++, note, 0 });
         const double d = compare (p, evs, 70000, 128, 96000);
-        check ("poly chord of 9 with stealing at 96 kHz: identical to engine", d == 0.0, "max diff " + juce::String (d));
+        check ("poly chord of 9 with stealing at 96 kHz: identical to engine", exactlyZero (d), "max diff " + juce::String (d));
     }
     {
         ThroatProcessor a;
@@ -121,6 +183,8 @@ int main()
         }
         check ("every parameter's range and default match the engine", ok);
     }
+
+    editorTest();
 
     std::cout << (fails ? juce::String (fails) + " FAILED" : juce::String ("all passed")) << std::endl;
     return fails ? 1 : 0;

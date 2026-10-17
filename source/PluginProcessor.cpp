@@ -1,4 +1,5 @@
 #include "PluginProcessor.h"
+#include "PluginEditor.h"
 
 namespace th = bytebent::throat;
 
@@ -73,6 +74,7 @@ bool ThroatProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 
 void ThroatProcessor::prepareToPlay (double sampleRate, int)
 {
+    currentSampleRate = sampleRate;
     dsp.prepare (sampleRate);
     pushParams();
     setLatencySamples (th::Engine::latency());
@@ -115,14 +117,41 @@ void ThroatProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
     }
     if (pos < n) dsp.process (out + pos, n - pos);
 
+    if (editorOpen.load (std::memory_order_relaxed))
+        publishView (out, n);
+
     for (int c = 1; c < numCh; ++c)
         buffer.copyFrom (c, 0, buffer, 0, 0, n);
 }
 
+void ThroatProcessor::publishView (const float* out, int n)
+{
+    auto& v = view;
+    if (dsp.vizReady)
+    {
+        dsp.vizReady = false;
+        for (int i = 0; i < ThroatView::N; ++i)
+        {
+            v.g[(size_t) i].store (dsp.vizG[i], std::memory_order_relaxed);
+            v.n[(size_t) i].store (dsp.vizN[i], std::memory_order_relaxed);
+        }
+        v.f0.store ((float) dsp.vizF0, std::memory_order_relaxed);
+        v.rd.store ((float) dsp.vizRd, std::memory_order_relaxed);
+        v.oq.store ((float) dsp.vizOq, std::memory_order_relaxed);
+    }
+    v.voices.store (dsp.vizVoices, std::memory_order_relaxed);
+    int p = v.ringPos.load (std::memory_order_relaxed);
+    for (int i = 0; i < n; ++i)
+    {
+        v.ring[(size_t) p].store (out[i], std::memory_order_relaxed);
+        p = (p + 1) % ThroatView::RING;
+    }
+    v.ringPos.store (p, std::memory_order_release);
+}
+
 juce::AudioProcessorEditor* ThroatProcessor::createEditor()
 {
-    // plain editor for now; the web interface replaces it
-    return new juce::GenericAudioProcessorEditor (*this);
+    return new ThroatEditor (*this);
 }
 
 void ThroatProcessor::getStateInformation (juce::MemoryBlock& destData)

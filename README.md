@@ -7,8 +7,8 @@ Each cycle of vocal-fold vibration is an LF (Liljencrants–Fant) glottal pulse,
 noise that pulses with every opening, per-cycle irregularity and subharmonics. The knobs blend
 freely between modal, breathy, pressed, creaky, falsetto-like, growled and voiceless sound.
 
-**Status:** DSP core, browser test bench and a JUCE instrument (AU, VST3, Standalone) with a plain
-editor. The web interface and the downloadable Mac build come next.
+**Status:** DSP core, browser test bench and a JUCE instrument (AU, VST3, Standalone) with its
+web interface. The downloadable Mac build comes next.
 
 ## Controls
 
@@ -42,6 +42,7 @@ Rebuild it after changing the engine: `node tools/bench/build.js`.
 - `reference/throat-engine.js` — the reference engine; defines the sound
 - `source/ThroatDSP.h` — C++ port, real-time safe, no JUCE dependency
 - `source/PluginProcessor.*` — JUCE instrument wrapper (MIDI in, mono/stereo out, 32 samples latency)
+- `source/PluginEditor.*`, `ui/index.html` — the interface, shown in a web view (also opens in a browser as a preview)
 - `tests/` — reference tests, test filter tests, and the C++ vs reference comparison
 - `tools/throat.html` — browser test bench (built from `tools/bench/`)
 

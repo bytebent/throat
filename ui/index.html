@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Throat</title>
+<style>
+:root{
+  --platinum:#dcdce0; --platinum-hi:#ececef; --etch:#9c9ca4; --ink:#000; --ink-soft:#4a4a52; --inset:#f4f4f6; --desk:#b9b9c0;
+  --red:#e03a3e; --red-dk:#9e1f23; --blue:#009ddc; --blue-dk:#00699a; --graphite:#6e6e78; --screen:#0b0b0e; --lcd:#8f8;
+  --ui:"Lucida Grande","Lucida Sans Unicode",Geneva,Verdana,sans-serif; --mono:Monaco,"Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:radial-gradient(circle at 1px 1px, rgba(0,0,0,.09) 1px, transparent 1.5px) 0 0/6px 6px, var(--desk);
+  font:13px/1.45 var(--ui); color:var(--ink); padding:0; overflow:hidden; -webkit-user-select:none; user-select:none}
+.window{width:100%;margin:0;border-radius:0;border:0;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,.55) 0 1px, rgba(255,255,255,0) 1px 2px, rgba(0,0,0,.035) 2px 3px, rgba(0,0,0,0) 3px 4px), var(--platinum);
+  border:1px solid #7d7d86;border-radius:9px;box-shadow:0 1px 0 #fff inset, 0 12px 32px rgba(0,0,0,.22);overflow:hidden}
+.titlebar{display:flex;align-items:center;gap:10px;padding:7px 12px 6px;background:linear-gradient(#f6f6f8,#d6d6db);border-bottom:1px solid #8e8e96}
+.closebox{width:12px;height:12px;border:1px solid #6e6e78;border-radius:2px;background:linear-gradient(#fff,#cfcfd5);flex:none}
+.titlebar .lines{flex:1;height:9px;background:repeating-linear-gradient(0deg,#9c9ca4 0 1px,transparent 1px 3px);opacity:.6;min-width:12px}
+.titlebar .t{font-weight:700;font-size:12px;white-space:nowrap}
+.mark{width:20px;height:16px;border-radius:3px;background:var(--graphite);box-shadow:0 0 0 1px rgba(0,0,0,.35);position:relative;flex:none;overflow:hidden}
+.mark::after{content:"";position:absolute;left:0;right:0;top:6px;height:4px;background:var(--red)}
+.titlebar .ver{color:var(--ink-soft);font-size:11px;white-space:nowrap}
+.body{padding:14px 18px 16px}
+
+/* screen */
+.screen{background:var(--screen);border-radius:6px;padding:10px;box-shadow:0 0 0 1px #000,0 2px 6px rgba(0,0,0,.5) inset;position:relative}
+.views{display:grid;grid-template-columns:3fr 2fr;gap:10px}
+.view{position:relative}
+.view canvas{display:block;width:100%;height:150px;border-radius:3px;background:#060608}
+.view .lbl{position:absolute;left:8px;top:6px;font:10px/1 var(--mono);color:var(--lcd);opacity:.8;letter-spacing:1px;pointer-events:none}
+.readouts{display:flex;flex-wrap:wrap;gap:4px 18px;font:11px/1 var(--mono);color:var(--lcd);margin-top:8px;letter-spacing:1px}
+.readouts b{font-weight:400;opacity:.6;margin-right:6px}
+
+/* controls */
+.rows{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+fieldset{flex:1 1 auto;margin:0;border:1px solid var(--etch);border-radius:6px;padding:8px 12px 10px;background:rgba(236,236,239,.7);box-shadow:0 1px 0 #fff, inset 0 1px 0 #fff;min-width:0}
+legend{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;padding:0 6px;display:flex;align-items:center;gap:6px}
+legend .dot{width:8px;height:8px;border-radius:50%;background:var(--graphite);box-shadow:0 0 0 1px rgba(0,0,0,.35) inset}
+.knobs{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:flex-end;justify-content:space-around}
+.knob{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;width:60px}
+.knob.big{width:84px}
+#g-out{flex-direction:column;align-items:center;gap:8px}
+#g-out .segwrap{padding-bottom:0}
+.dial{--v:0;--a0:0deg;--a1:0deg;--c:var(--graphite);position:relative;width:44px;height:44px;border-radius:50%;cursor:ns-resize;touch-action:none;outline:none;
+  background:conic-gradient(from 225deg, #b9b9c0 0 var(--a0), var(--c) var(--a0) var(--a1), #b9b9c0 var(--a1) 270deg, transparent 270deg)}
+.knob.big .dial{width:66px;height:66px}
+.dial::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--platinum-hi)}
+.dial .cap{position:absolute;inset:6px;border-radius:50%;
+  background:radial-gradient(circle at 50% 22%, rgba(255,255,255,.95) 0 18%, rgba(255,255,255,0) 46%), radial-gradient(circle at 50% 80%, #f7f7fa, #c8c8ce 60%, #9a9aa3);
+  box-shadow:0 2px 3px rgba(0,0,0,.35), 0 0 0 1px #7d7d86}
+.knob.big .dial .cap{inset:8px}
+.dial .ptr{position:absolute;inset:6px;border-radius:50%;pointer-events:none}
+.knob.big .dial .ptr{inset:8px}
+.dial .ptr::after{content:"";position:absolute;left:50%;top:3px;width:3px;height:30%;margin-left:-1.5px;border-radius:2px;background:#1a1a1e}
+.dial:focus-visible{box-shadow:0 0 0 2px var(--blue)}
+.knob .name{font-weight:700;white-space:nowrap}
+.val{font:700 10.5px var(--ui);background:var(--inset);box-shadow:inset 0 1px 2px rgba(0,0,0,.25);border-radius:3px;padding:1px 6px;min-width:52px;text-align:center;white-space:nowrap}
+
+.seg{display:inline-flex;border:1px solid #7d7d86;border-radius:999px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.seg button{font:700 11px var(--ui);border:0;padding:4px 12px;cursor:pointer;color:#222;background:linear-gradient(#fff,#d8d8dd 48%,#c4c4ca 52%,#e6e6ea)}
+.seg button+button{border-left:1px solid #9c9ca4}
+.seg button[aria-pressed="true"]{color:#fff;text-shadow:0 -1px 0 rgba(0,0,0,.3);background:linear-gradient(#8fd8f7,var(--blue) 48%,#0086c0 52%,#38b8ea)}
+.segwrap{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;font-weight:700;padding-bottom:4px}
+
+.gel{display:inline-flex;align-items:center;padding:6px 18px;border-radius:999px;font:700 12px var(--ui);color:#fff;border:1px solid var(--blue-dk);position:relative;cursor:pointer;
+  background:linear-gradient(#8fd8f7,var(--blue) 48%,#0086c0 52%,#38b8ea);box-shadow:0 2px 4px rgba(0,0,0,.3), 0 1px 0 rgba(255,255,255,.5) inset;text-shadow:0 -1px 0 rgba(0,0,0,.3)}
+.gel::before{content:"";position:absolute;left:10px;right:10px;top:2px;height:45%;border-radius:999px;background:linear-gradient(rgba(255,255,255,.75),rgba(255,255,255,.1));pointer-events:none}
+.gel.grey{color:#222;border-color:#7d7d86;text-shadow:0 1px 0 #fff;background:linear-gradient(#fff,#d8d8dd 48%,#c4c4ca 52%,#e6e6ea)}
+.gel.red{border-color:var(--red-dk);background:linear-gradient(#f7a4a6,var(--red) 48%,#c42a2e 52%,#ee6a6d)}
+
+/* test filters */
+.aidrow{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center}
+  background:linear-gradient(#fff,#d8d8dd);box-shadow:0 1px 2px rgba(0,0,0,.2);position:relative}
+  background:linear-gradient(#fff,#d8d8dd 48%,#c4c4ca 52%,#e6e6ea);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.dim{opacity:.45}
+
+/* keyboard */
+
+
+.dim{opacity:.45}
+html,body{height:100%}
+</style>
+</head>
+<body>
+<div class="window" role="application" aria-label="Throat">
+  <div class="titlebar"><span class="closebox"></span><span class="lines"></span><span class="mark" aria-hidden="true"></span><span class="t">Throat</span><span class="lines"></span><span class="ver" id="ver">v0.1 &#183; Bytebent Audio</span></div>
+  <div class="body">
+    <div class="screen">
+      <div class="views">
+        <div class="view"><canvas id="glot" aria-label="Last two glottal cycles"></canvas><span class="lbl" id="glotLbl">GLOTTAL FLOW</span></div>
+        <div class="view"><canvas id="spec" aria-label="Output spectrum"></canvas><span class="lbl">SPECTRUM</span></div>
+      </div>
+      <div class="readouts" aria-live="off">
+        <span><b>F0</b><span id="roF0">&#8212;</span></span>
+        <span><b>RD</b><span id="roRd">&#8212;</span></span>
+        <span><b>OQ</b><span id="roOq">&#8212;</span></span>
+        <span><b>VOICES</b><span id="roVo">0</span></span>
+      </div>
+    </div>
+
+    <div class="rows">
+      <fieldset><legend><span class="dot" style="background:var(--red)"></span>Phonation</legend><div class="knobs" id="g-phon"></div></fieldset>
+      <fieldset><legend><span class="dot"></span>Irregularity</legend><div class="knobs" id="g-irr"></div></fieldset>
+      <fieldset><legend><span class="dot"></span>Pitch</legend><div class="knobs" id="g-pitch">
+        <div class="segwrap">Voices<div class="seg" id="segMode"><button type="button" data-v="0">Mono</button><button type="button" data-v="1">Poly</button></div></div>
+      </div></fieldset>
+      <fieldset><legend><span class="dot"></span>Envelope</legend><div class="knobs" id="g-env"></div></fieldset>
+      <fieldset><legend><span class="dot"></span>Output</legend><div class="knobs" id="g-out">
+        <div class="segwrap">Source<div class="seg" id="segSrc"><button type="button" data-v="0">Flow</button><button type="button" data-v="1">Derivative</button></div></div>
+      </div></fieldset>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  /* ---------- parameters: ids, ranges and curves match source/PluginProcessor.cpp ---------- */
+  const pct = v => Math.round(v * 100) + '%';
+  const secs = v => v < 1 ? Math.round(v * 1000) + ' ms' : v.toFixed(2) + ' s';
+  const SPECS = [
+    { g: 'g-phon', id: 'voicing', name: 'Voicing', min: 0, max: 1, def: 1, fmt: v => v <= 0.001 ? 'Voiceless' : v >= 0.999 ? 'Voiced' : pct(v), big: true, c: 'var(--red)' },
+    { g: 'g-phon', id: 'breathy', name: 'Breathy', min: 0, max: 1, def: 0, fmt: pct, c: 'var(--red)' },
+    { g: 'g-phon', id: 'tense', name: 'Tense', min: 0, max: 1, def: 0, fmt: pct, c: 'var(--red)' },
+    { g: 'g-phon', id: 'creaky', name: 'Creaky', min: 0, max: 1, def: 0, fmt: pct, c: 'var(--red)' },
+    { g: 'g-phon', id: 'thin', name: 'Thin', min: 0, max: 1, def: 0, fmt: pct, c: 'var(--red)' },
+    { g: 'g-phon', id: 'growl', name: 'Growl', min: 0, max: 1, def: 0, fmt: pct, c: 'var(--red)' },
+    { g: 'g-irr', id: 'jitter', name: 'Jitter', min: 0, max: 1, def: 0, fmt: pct },
+    { g: 'g-irr', id: 'shimmer', name: 'Shimmer', min: 0, max: 1, def: 0, fmt: pct },
+    { g: 'g-pitch', id: 'transpose', name: 'Transpose', min: -24, max: 24, def: 0, step: 1, bipolar: true, fmt: v => (v > 0 ? '+' : '') + Math.round(v) + ' st' },
+    { g: 'g-pitch', id: 'detune', name: 'Detune', min: -100, max: 100, def: 0, bipolar: true, fmt: v => (v > 0 ? '+' : '') + Math.round(v) + ' ct' },
+    { g: 'g-pitch', id: 'glide', name: 'Glide', min: 0, max: 2, def: 0.06, curve: 3, fmt: v => v < 0.0015 ? 'Off' : secs(v) },
+    { g: 'g-env', id: 'attack', name: 'Attack', min: 0.001, max: 5, def: 0.02, curve: 3, fmt: secs },
+    { g: 'g-env', id: 'decay', name: 'Decay', min: 0.001, max: 5, def: 0.3, curve: 3, fmt: secs },
+    { g: 'g-env', id: 'sustain', name: 'Sustain', min: 0, max: 1, def: 0.8, fmt: pct },
+    { g: 'g-env', id: 'release', name: 'Release', min: 0.001, max: 8, def: 0.25, curve: 3, fmt: secs },
+    { g: 'g-out', id: 'volume', name: 'Volume', min: -48, max: 6, def: -6, fmt: v => (v > 0 ? '+' : '') + v.toFixed(1) + ' dB' },
+  ];
+
+  /* ---------- host bridge (JUCE web view); outside the plugin the page works on its own ---------- */
+  const juce = window.__JUCE__ && window.__JUCE__.backend;
+  const Host = juce ? {
+    set: (id, n) => juce.emitEvent('setParam', { id, value: n }),
+    begin: id => juce.emitEvent('gesture', { id, begin: true }),
+    end: id => juce.emitEvent('gesture', { id, begin: false }),
+    on: (name, cb) => juce.addEventListener(name, cb),
+    ready: () => juce.emitEvent('uiReady', {}),
+  } : { set() {}, begin() {}, end() {}, on() {}, ready() {} };
+  const initData = window.__JUCE__ && window.__JUCE__.initialisationData;
+  if (initData && initData.version) document.getElementById('ver').textContent = 'v' + initData.version + ' \u00b7 Bytebent Audio';
+
+  const state = { mode: 0, source: 0 };
+
+  /* ---------- knobs ---------- */
+  const knobs = {};
+  function toNorm(s, v) {
+    const n = (v - s.min) / (s.max - s.min);
+    return s.curve ? Math.cbrt(Math.min(1, Math.max(0, n))) : n;
+  }
+  function fromNorm(s, n) {
+    n = Math.min(1, Math.max(0, n));
+    let v = s.min + (s.max - s.min) * (s.curve ? n * n * n : n);
+    if (s.step) v = Math.round(v / s.step) * s.step;
+    return v;
+  }
+  function makeKnob(s) {
+    const el = document.createElement('div');
+    el.className = 'knob' + (s.big ? ' big' : '');
+    el.innerHTML = '<div class="dial" tabindex="0" role="slider"><div class="cap"></div><div class="ptr"></div></div><span class="name"></span><span class="val"></span>';
+    const dial = el.firstChild, valEl = el.lastChild;
+    el.children[1].textContent = s.name;
+    dial.setAttribute('aria-label', s.name);
+    if (s.c) dial.style.setProperty('--c', s.c);
+    const host = document.getElementById(s.g);
+    const seg = host.querySelector('.segwrap');
+    if (seg && s.id !== 'volume') host.insertBefore(el, seg); else host.appendChild(el);
+    const k = { s, dial, norm: toNorm(s, s.def) };
+    k.show = n => {
+      k.norm = Math.min(1, Math.max(0, n));
+      const v = fromNorm(s, k.norm);
+      if (s.step) k.norm = toNorm(s, v);
+      const nn = k.norm;
+      let a0 = 0, a1 = nn;
+      if (s.bipolar) { a0 = Math.min(nn, 0.5); a1 = Math.max(nn, 0.5); }
+      dial.style.setProperty('--a0', (a0 * 270) + 'deg');
+      dial.style.setProperty('--a1', (a1 * 270) + 'deg');
+      dial.querySelector('.ptr').style.transform = 'rotate(' + (-135 + nn * 270) + 'deg)';
+      const txt = s.fmt(v);
+      valEl.textContent = txt;
+      dial.setAttribute('aria-valuenow', v.toFixed(3));
+      dial.setAttribute('aria-valuetext', txt);
+    };
+    k.set = n => { const before = k.norm; k.show(n); if (k.norm !== before) Host.set(s.id, k.norm); };
+    const once = n => { Host.begin(s.id); k.set(n); Host.end(s.id); };
+    let dragY = null, startN = 0;
+    dial.addEventListener('pointerdown', e => { dial.setPointerCapture(e.pointerId); dragY = e.clientY; startN = k.norm; dial.focus(); Host.begin(s.id); e.preventDefault(); });
+    dial.addEventListener('pointermove', e => {
+      if (dragY === null) return;
+      k.set(startN + (dragY - e.clientY) * (e.shiftKey ? 0.0008 : 0.005));
+      if (e.shiftKey) { dragY = e.clientY; startN = k.norm; }
+    });
+    const end = () => { if (dragY !== null) { dragY = null; Host.end(s.id); } };
+    dial.addEventListener('pointerup', end); dial.addEventListener('pointercancel', end);
+    dial.addEventListener('dblclick', () => once(toNorm(s, s.def)));
+    dial.addEventListener('wheel', e => { e.preventDefault(); once(k.norm - Math.sign(e.deltaY) * (e.shiftKey ? 0.005 : 0.03)); }, { passive: false });
+    dial.addEventListener('keydown', e => {
+      const st = s.step ? 1 / ((s.max - s.min) / s.step) : (e.shiftKey ? 0.005 : 0.02);
+      let n = null;
+      if (e.key === 'ArrowUp' || e.key === 'ArrowRight') n = k.norm + st;
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') n = k.norm - st;
+      else if (e.key === 'Home') n = 0;
+      else if (e.key === 'End') n = 1;
+      if (n !== null) { e.preventDefault(); once(n); }
+    });
+    k.show(k.norm);
+    knobs[s.id] = k;
+  }
+  SPECS.forEach(makeKnob);
+
+  const segs = {};
+  function makeSeg(elId, param) {
+    const btns = [...document.getElementById(elId).querySelectorAll('button')];
+    const show = v => { state[param] = v; btns.forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === v))); if (param === 'mode') dimGlide(); };
+    btns.forEach(b => b.addEventListener('click', () => {
+      const v = +b.dataset.v;
+      if (v === state[param]) return;
+      show(v); Host.begin(param); Host.set(param, v); Host.end(param);
+    }));
+    show(0);
+    segs[param] = show;
+  }
+  function dimGlide() { knobs.glide.dial.parentNode.classList.toggle('dim', state.mode === 1); }
+  makeSeg('segMode', 'mode');
+  makeSeg('segSrc', 'source');
+
+  // values from the host: automation, presets, undo, first load (normalised 0-1)
+  Host.on('param', e => {
+    if (knobs[e.id]) knobs[e.id].show(e.value);
+    else if (segs[e.id]) segs[e.id](e.value >= 0.5 ? 1 : 0);
+  });
+
+  /* ---------- live view ---------- */
+  const glot = document.getElementById('glot'), spec = document.getElementById('spec');
+  const gx = glot.getContext('2d'), sx = spec.getContext('2d');
+  const ro = { f0: document.getElementById('roF0'), rd: document.getElementById('roRd'), oq: document.getElementById('roOq'), vo: document.getElementById('roVo') };
+  let view = null, scale = 0.2, mags = null, sampleRate = 48000;
+
+  Host.on('view', m => {
+    view = m;
+    if (m.sampleRate) sampleRate = m.sampleRate;
+    if (m.voices > 0 && m.g) {
+      ro.f0.textContent = m.f0 ? m.f0.toFixed(1) + ' Hz' : '\u2014';
+      ro.rd.textContent = (+m.rd).toFixed(2);
+      ro.oq.textContent = (+m.oq).toFixed(2);
+    }
+    ro.vo.textContent = m.voices + (state.mode === 1 ? '/8' : '');
+    if (m.samples) analyse(m.samples);
+  });
+
+  // spectrum: Blackman window, |X|/N, smoothed like a Web Audio analyser
+  function fft(re, im) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) {
+      let bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+      const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang), h = len >> 1;
+      for (let i = 0; i < n; i += len) {
+        let cr = 1, ci = 0;
+        for (let j = 0; j < h; j++) {
+          const a = i + j, b = a + h;
+          const vr = re[b] * cr - im[b] * ci, vi = re[b] * ci + im[b] * cr;
+          re[b] = re[a] - vr; im[b] = im[a] - vi; re[a] += vr; im[a] += vi;
+          const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t;
+        }
+      }
+    }
+  }
+  let re = null, im = null, win = null;
+  function analyse(samples) {
+    const n = samples.length;
+    if (!re || re.length !== n) {
+      re = new Float64Array(n); im = new Float64Array(n); win = new Float64Array(n); mags = new Float64Array(n / 2);
+      for (let i = 0; i < n; i++) win[i] = 0.42 - 0.5 * Math.cos(2 * Math.PI * i / n) + 0.08 * Math.cos(4 * Math.PI * i / n);
+    }
+    for (let i = 0; i < n; i++) { re[i] = samples[i] * win[i]; im[i] = 0; }
+    fft(re, im);
+    for (let k = 0; k < n / 2; k++) mags[k] = 0.55 * mags[k] + 0.45 * Math.hypot(re[k], im[k]) / n;
+  }
+
+  function fit(c) {
+    const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    const w = Math.round(r.width * d), h = Math.round(r.height * d);
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+    return d;
+  }
+  function drawGlot() {
+    const d = fit(glot), W = glot.width, H = glot.height, mid = H * 0.55;
+    gx.clearRect(0, 0, W, H);
+    gx.strokeStyle = 'rgba(143,255,136,.08)'; gx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) { gx.beginPath(); gx.moveTo(0, H * i / 4); gx.lineTo(W, H * i / 4); gx.stroke(); }
+    gx.beginPath(); gx.moveTo(W / 2, 0); gx.lineTo(W / 2, H); gx.stroke();
+    document.getElementById('glotLbl').textContent = state.source ? 'FLOW DERIVATIVE' : 'GLOTTAL FLOW';
+    if (!view || !view.g || !(view.voices > 0)) {
+      gx.strokeStyle = 'rgba(224,58,62,.35)'; gx.lineWidth = 2 * d; gx.beginPath(); gx.moveTo(0, mid); gx.lineTo(W, mid); gx.stroke();
+      return;
+    }
+    const g = view.g, n = view.n, N = g.length;
+    let mx = 0; for (let i = 0; i < N; i++) mx = Math.max(mx, Math.abs(g[i]), n[i] * 0.35);
+    scale += ((mx > 1e-4 ? mx : scale) - scale) * (mx > scale ? 0.5 : 0.06);
+    const ys = H * 0.4 / Math.max(scale, 1e-3);
+    const X = i => i / (N - 1) * W;
+    gx.fillStyle = 'rgba(224,58,62,.22)';
+    gx.beginPath();
+    for (let i = 0; i < N; i++) gx.lineTo(X(i), mid - (g[i] + n[i] * 0.35) * ys);
+    for (let i = N - 1; i >= 0; i--) gx.lineTo(X(i), mid - (g[i] - n[i] * 0.35) * ys);
+    gx.closePath(); gx.fill();
+    gx.strokeStyle = '#e03a3e'; gx.lineWidth = 2 * d; gx.shadowColor = '#e03a3e'; gx.shadowBlur = 8 * d;
+    gx.beginPath();
+    for (let i = 0; i < N; i++) { const y = mid - g[i] * ys; i ? gx.lineTo(X(i), y) : gx.moveTo(X(i), y); }
+    gx.stroke(); gx.shadowBlur = 0;
+  }
+  function drawSpec() {
+    const d = fit(spec), W = spec.width, H = spec.height;
+    sx.clearRect(0, 0, W, H);
+    const fmin = 50, fmax = 16000, lx = f => Math.log(f / fmin) / Math.log(fmax / fmin) * W;
+    sx.strokeStyle = 'rgba(143,255,136,.08)'; sx.lineWidth = 1; sx.fillStyle = 'rgba(143,255,136,.45)'; sx.font = (9 * d) + 'px Monaco, monospace'; sx.textAlign = 'center';
+    for (const f of [100, 200, 500, 1000, 2000, 5000, 10000]) {
+      const x = lx(f); sx.beginPath(); sx.moveTo(x, 0); sx.lineTo(x, H); sx.stroke();
+      if (f === 100 || f === 1000 || f === 10000) sx.fillText(f >= 1000 ? (f / 1000) + 'k' : f, x, H - 4 * d);
+    }
+    if (!mags) return;
+    const binHz = sampleRate / (mags.length * 2), lo = -110, hi = -10;
+    const y = v => H - (Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo) * (H - 14 * d) - 12 * d;
+    sx.beginPath(); sx.moveTo(0, H);
+    let px = 0;
+    for (let x = 0; x <= W; x += d) {
+      const f0 = fmin * Math.pow(fmax / fmin, x / W), f1 = fmin * Math.pow(fmax / fmin, (x + d) / W);
+      const b0 = Math.floor(f0 / binHz), b1 = Math.max(b0 + 1, Math.ceil(f1 / binHz));
+      let m = 0;
+      for (let b = b0; b < b1 && b < mags.length; b++) m = Math.max(m, mags[b]);
+      sx.lineTo(x, y(20 * Math.log10(m + 1e-12))); px = x;
+    }
+    sx.lineTo(px, H); sx.closePath();
+    const grd = sx.createLinearGradient(0, 0, 0, H); grd.addColorStop(0, 'rgba(224,58,62,.55)'); grd.addColorStop(1, 'rgba(224,58,62,.05)');
+    sx.fillStyle = grd; sx.fill();
+    sx.strokeStyle = '#e03a3e'; sx.lineWidth = 1.2 * d; sx.stroke();
+  }
+  const slow = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let last = 0;
+  function frame(t) {
+    if (!slow || t - last > 250) { last = t; drawGlot(); drawSpec(); }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  Host.ready();
+})();
+</script>
+</body>
+</html>

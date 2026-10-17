@@ -14,6 +14,12 @@
 #include <cstring>
 #include <vector>
 
+#if defined(__GNUC__)
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wfloat-equal"     // exact compares are intended (NaN check, 0/1 switches)
+ #pragma GCC diagnostic ignored "-Wsign-conversion" // table building indexes vectors with int offsets
+#endif
+
 namespace bytebent { namespace throat {
 
 constexpr int OS = 4;                 // internal oversampling
@@ -674,3 +680,7 @@ inline void Voice::render(int n) {
 }
 
 }} // namespace bytebent::throat
+
+#if defined(__GNUC__)
+ #pragma GCC diagnostic pop
+#endif
