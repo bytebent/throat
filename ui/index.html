@@ -42,7 +42,6 @@ body{background:radial-gradient(circle at 1px 1px, rgba(0,0,0,.09) 1px, transpar
 .pmenu{position:absolute;top:28px;left:26px;width:230px;max-height:420px;overflow-y:auto;background:var(--platinum-hi);border:1px solid #7d7d86;border-radius:5px;
   box-shadow:0 8px 20px rgba(0,0,0,.3);padding:4px 0;z-index:10;font-size:12px}
 .pmenu[hidden]{display:none}
-.pmenu .hd{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-soft);padding:6px 10px 3px}
 .pmenu .it{display:flex;align-items:center;padding:3px 10px;cursor:pointer}
 .pmenu .it span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pmenu .it:hover,.pmenu .it.cur{background:var(--blue);color:#fff}
@@ -288,7 +287,7 @@ html,body{height:100%}
   /* ---------- presets (stored by the plugin; see source/PresetManager.h) ---------- */
   const pName = document.getElementById('pName'), pTxt = document.getElementById('pTxt'), pMod = document.getElementById('pMod');
   const pMenu = document.getElementById('pMenu'), pSave = document.getElementById('pSave');
-  let presets = { factory: [], user: [], current: 'Init', kind: 'factory', modified: false };
+  let presets = { user: [], current: 'Init', kind: 'none', modified: false };
   let editing = false;
   const action = a => juce && juce.emitEvent('presetAction', a);
   function showPresets() {
@@ -299,25 +298,18 @@ html,body{height:100%}
   Host.on('presets', m => { presets = m; showPresets(); if (!pMenu.hidden) buildMenu(); });
   function buildMenu() {
     pMenu.textContent = '';
-    const section = (title, names, kind) => {
-      const hd = document.createElement('div'); hd.className = 'hd'; hd.textContent = title; pMenu.appendChild(hd);
-      if (!names.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'None saved'; pMenu.appendChild(e); }
-      for (const name of names) {
-        const it = document.createElement('div');
-        it.className = 'it' + (name === presets.current && kind === presets.kind ? ' cur' : '');
-        it.setAttribute('role', 'option');
-        const t = document.createElement('span'); t.textContent = name; it.appendChild(t);
-        if (kind === 'user') {
-          const del = document.createElement('button'); del.className = 'del'; del.type = 'button'; del.setAttribute('aria-label', 'Delete ' + name);
-          del.addEventListener('click', e => { e.stopPropagation(); action({ action: 'delete', name }); });
-          it.appendChild(del);
-        }
-        it.addEventListener('click', () => { closeMenu(); action({ action: 'load', kind, name }); });
-        pMenu.appendChild(it);
-      }
-    };
-    section('Factory', presets.factory, 'factory');
-    section('User', presets.user, 'user');
+    if (!presets.user.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'None saved'; pMenu.appendChild(e); }
+    for (const name of presets.user) {
+      const it = document.createElement('div');
+      it.className = 'it' + (name === presets.current && presets.kind === 'user' ? ' cur' : '');
+      it.setAttribute('role', 'option');
+      const t = document.createElement('span'); t.textContent = name; it.appendChild(t);
+      const del = document.createElement('button'); del.className = 'del'; del.type = 'button'; del.setAttribute('aria-label', 'Delete ' + name);
+      del.addEventListener('click', e => { e.stopPropagation(); action({ action: 'delete', name }); });
+      it.appendChild(del);
+      it.addEventListener('click', () => { closeMenu(); action({ action: 'load', name }); });
+      pMenu.appendChild(it);
+    }
   }
   function openMenu() { if (editing) return; buildMenu(); pMenu.hidden = false; }
   function closeMenu() { pMenu.hidden = true; }

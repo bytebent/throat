@@ -32,7 +32,7 @@ unzip it and follow `INSTALL.txt` (right-click `Install.command` → Open).
 | Envelope | Attack / Decay / Sustain / Release | Amplitude envelope. |
 | Output | Source | Glottal flow, or its derivative (brighter). |
 | | Volume | −48 to +6 dB. |
-| Presets | ◀ name ▶, Save | 11 factory presets; your own are saved to `~/Music/Bytebent/Throat/Presets`. A `*` marks changes since loading. |
+| Presets | ◀ name ▶, Save | Your presets, saved to `~/Music/Bytebent/Throat/Presets`. A `*` marks changes since loading. |
 
 The plugin adds 32 samples of latency, which it reports to the host.
 
@@ -51,7 +51,7 @@ Rebuild it after changing the engine: `node tools/bench/build.js`.
 - `source/ThroatDSP.h` — C++ port, real-time safe, no JUCE dependency
 - `source/PluginProcessor.*` — JUCE instrument wrapper (MIDI in, mono/stereo out, 32 samples latency)
 - `source/PluginEditor.*`, `ui/index.html` — the interface, shown in a web view (also opens in a browser as a preview)
-- `source/PresetManager.h` — factory and user presets
+- `source/PresetManager.h` — saving and loading presets
 - `packaging/` — installer script and instructions for the Mac download
 - `tests/` — reference tests, test filter tests, and the C++ vs reference comparison
 - `tools/throat.html` — browser test bench (built from `tools/bench/`)

@@ -83,7 +83,7 @@ void ThroatEditor::onPresetAction (const juce::var& v)
     const auto name = v.getProperty ("name", {}).toString();
     if (action == "load")
     {
-        if (v.getProperty ("kind", {}).toString() == "user") pm.loadUser (name); else pm.loadFactory (name);
+        pm.loadUser (name);
     }
     else if (action == "save") pm.saveUser (name);
     else if (action == "delete") pm.deleteUser (name);
@@ -96,7 +96,6 @@ void ThroatEditor::sendPresets()
     auto& pm = proc.presets;
     auto toVar = [] (const juce::StringArray& a) { juce::Array<juce::var> r; for (auto& s : a) r.add (s); return juce::var (r); };
     auto* obj = new juce::DynamicObject();
-    obj->setProperty ("factory", toVar (pm.factoryNames()));
     obj->setProperty ("user", toVar (pm.userNames()));
     obj->setProperty ("current", pm.currentName());
     obj->setProperty ("kind", pm.currentKind());

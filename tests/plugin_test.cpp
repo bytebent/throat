@@ -124,21 +124,15 @@ static void editorTest()
     ed = nullptr;
 }
 
-// ---- presets: factory values, user files, the page's preset bar, project state ----
+// ---- presets: user files, the page's preset bar, project state ----
 static void presetTest()
 {
     {
         ThroatProcessor p;
         auto& pm = p.presets;
-        check ("factory list starts with Init and has all phonation presets", pm.factoryNames().size() == 11 && pm.factoryNames()[0] == "Init");
-        setParam (p, "jitter", 0.9f);
-        pm.loadFactory ("Vocal Fry");
-        auto val = [&] (const char* id) { return p.apvts.getRawParameterValue (id)->load(); };
-        check ("factory preset sets its values and resets the rest to defaults",
-               std::abs (val ("creaky") - 0.85f) < 1e-4f && std::abs (val ("transpose") + 12.0f) < 1e-4f && val ("jitter") < 1e-6f && std::abs (val ("voicing") - 1.0f) < 1e-6f);
-        check ("not marked modified right after loading", ! pm.isModified());
-        setParam (p, "breathy", 0.3f);
-        check ("marked modified after a knob moves", pm.isModified());
+        check ("no factory presets: a fresh instance has nothing to step to", pm.userNames().isEmpty() && pm.currentName() == "Init");
+        pm.step (1);
+        check ("arrows do nothing with no saved presets", pm.currentName() == "Init" && pm.currentKind() == "none");
     }
 
     ThroatProcessor p;
@@ -163,10 +157,13 @@ static void presetTest()
     check ("page shows the saved name without a change mark",
            js ("document.getElementById('pTxt').textContent + '|' + document.getElementById('pMod').hidden").toString() == "My Voice|true");
 
-    // load a factory preset from the menu, then the user preset back
-    js ("(document.getElementById('pName').click(), [...document.querySelectorAll('#pMenu .it')].find(e=>e.textContent==='Whisper').click(), 1)");
-    check ("menu loads a factory preset", val ("voicing") < 1e-6f && std::abs (val ("tense") - 0.7f) < 1e-4f && val ("mode") < 0.5f);
-    js ("(document.getElementById('pName').click(), [...document.querySelectorAll('#pMenu .it')].find(e=>e.textContent==='My Voice').click(), 1)");
+    // a second preset, then load the first back from the menu
+    setParam (p, "breathy", 0.0f); setParam (p, "voicing", 0.0f); setParam (p, "tense", 0.7f); setParam (p, "mode", 0);
+    p.presets.saveUser ("Whisper Test");
+    for (int i = 0; i < 10; ++i) pump();
+    check ("menu lists only saved presets, sorted",
+           js ("[...document.querySelectorAll('#pMenu .it')].length + '|' + (document.getElementById('pName').click(), [...document.querySelectorAll('#pMenu .it')].map(e=>e.textContent).join(','))").toString() == "0|My Voice,Whisper Test");
+    js ("([...document.querySelectorAll('#pMenu .it')].find(e=>e.textContent==='My Voice').click(), 1)");
     check ("menu loads the user preset with its values",
            std::abs (val ("breathy") - 0.42f) < 1e-4f && std::abs (val ("growl") - 0.25f) < 1e-4f && val ("mode") > 0.5f && std::abs (val ("voicing") - 1.0f) < 1e-6f);
 
@@ -175,11 +172,14 @@ static void presetTest()
     for (int i = 0; i < 10; ++i) pump();
     check ("page marks the preset as changed", js ("String(document.getElementById('pMod').hidden)").toString() == "false");
 
-    // arrows: next from the last user preset wraps to Init, previous goes back
+    // arrows step through the saved presets and wrap around
     js ("(document.getElementById('pNext').click(), 1)");
-    check ("next arrow wraps to the first factory preset", p.presets.currentName() == "Init" && val ("breathy") < 1e-6f, p.presets.currentName());
+    check ("next arrow loads the next preset", p.presets.currentName() == "Whisper Test" && val ("voicing") < 1e-6f, p.presets.currentName());
+    js ("(document.getElementById('pNext').click(), 1)");
+    check ("next arrow wraps around to the first", p.presets.currentName() == "My Voice" && std::abs (val ("breathy") - 0.42f) < 1e-4f, p.presets.currentName());
     js ("(document.getElementById('pPrev').click(), 1)");
-    check ("previous arrow goes back to the user preset", p.presets.currentName() == "My Voice", p.presets.currentName());
+    check ("previous arrow wraps the other way", p.presets.currentName() == "Whisper Test", p.presets.currentName());
+    js ("(document.getElementById('pPrev').click(), 1)");
 
     // the preset name is saved with the project
     juce::MemoryBlock mb; p.getStateInformation (mb);
