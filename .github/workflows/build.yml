@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dsp-tests:
+    name: DSP tests (C++ vs JS reference)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Reference engine tests
+        run: node tests/engine-test.js
+      - name: Test filter tests
+        run: node tests/filter-test.js
+      - name: Build C++ test CLI
+        run: g++ -O2 -std=c++17 -ffp-contract=off -Wall -Wextra -Werror -o dsp_cli tests/dsp_cli.cpp
+      - name: C++ matches the reference
+        run: node tests/compare.js ./dsp_cli
+      - name: Bench page is up to date
+        run: node tools/bench/build.js && git diff --exit-code tools/throat.html

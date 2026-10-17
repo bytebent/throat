@@ -1,0 +1,1296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Throat</title>
+<style>
+:root{
+  --platinum:#dcdce0; --platinum-hi:#ececef; --etch:#9c9ca4; --ink:#000; --ink-soft:#4a4a52; --inset:#f4f4f6; --desk:#b9b9c0;
+  --red:#e03a3e; --red-dk:#9e1f23; --blue:#009ddc; --blue-dk:#00699a; --graphite:#6e6e78; --screen:#0b0b0e; --lcd:#8f8;
+  --ui:"Lucida Grande","Lucida Sans Unicode",Geneva,Verdana,sans-serif; --mono:Monaco,"Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:radial-gradient(circle at 1px 1px, rgba(0,0,0,.09) 1px, transparent 1.5px) 0 0/6px 6px, var(--desk);
+  font:13px/1.45 var(--ui); color:var(--ink); padding:24px 16px 40px; -webkit-user-select:none; user-select:none}
+.window{max-width:900px;margin:0 auto;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,.55) 0 1px, rgba(255,255,255,0) 1px 2px, rgba(0,0,0,.035) 2px 3px, rgba(0,0,0,0) 3px 4px), var(--platinum);
+  border:1px solid #7d7d86;border-radius:9px;box-shadow:0 1px 0 #fff inset, 0 12px 32px rgba(0,0,0,.22);overflow:hidden}
+.titlebar{display:flex;align-items:center;gap:10px;padding:7px 12px 6px;background:linear-gradient(#f6f6f8,#d6d6db);border-bottom:1px solid #8e8e96}
+.closebox{width:12px;height:12px;border:1px solid #6e6e78;border-radius:2px;background:linear-gradient(#fff,#cfcfd5);flex:none}
+.titlebar .lines{flex:1;height:9px;background:repeating-linear-gradient(0deg,#9c9ca4 0 1px,transparent 1px 3px);opacity:.6;min-width:12px}
+.titlebar .t{font-weight:700;font-size:12px;white-space:nowrap}
+.mark{width:20px;height:16px;border-radius:3px;background:var(--graphite);box-shadow:0 0 0 1px rgba(0,0,0,.35);position:relative;flex:none;overflow:hidden}
+.mark::after{content:"";position:absolute;left:0;right:0;top:6px;height:4px;background:var(--red)}
+.titlebar .ver{color:var(--ink-soft);font-size:11px;white-space:nowrap}
+.body{padding:14px 18px 16px}
+
+/* screen */
+.screen{background:var(--screen);border-radius:6px;padding:10px;box-shadow:0 0 0 1px #000,0 2px 6px rgba(0,0,0,.5) inset;position:relative}
+.views{display:grid;grid-template-columns:3fr 2fr;gap:10px}
+.view{position:relative}
+.view canvas{display:block;width:100%;height:150px;border-radius:3px;background:#060608}
+.view .lbl{position:absolute;left:8px;top:6px;font:10px/1 var(--mono);color:var(--lcd);opacity:.8;letter-spacing:1px;pointer-events:none}
+.readouts{display:flex;flex-wrap:wrap;gap:4px 18px;font:11px/1 var(--mono);color:var(--lcd);margin-top:8px;letter-spacing:1px}
+.readouts b{font-weight:400;opacity:.6;margin-right:6px}
+.power{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(11,11,14,.86);border-radius:6px;z-index:2}
+.power.hide{display:none}
+
+/* controls */
+.rows{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+fieldset{flex:1 1 auto;margin:0;border:1px solid var(--etch);border-radius:6px;padding:8px 12px 10px;background:rgba(236,236,239,.7);box-shadow:0 1px 0 #fff, inset 0 1px 0 #fff;min-width:0}
+legend{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;padding:0 6px;display:flex;align-items:center;gap:6px}
+legend .dot{width:8px;height:8px;border-radius:50%;background:var(--graphite);box-shadow:0 0 0 1px rgba(0,0,0,.35) inset}
+.knobs{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:flex-end;justify-content:space-around}
+.knob{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;width:60px}
+.knob.big{width:84px}
+#g-out{flex-direction:column;align-items:center;gap:8px}
+#g-out .segwrap{padding-bottom:0}
+.dial{--v:0;--a0:0deg;--a1:0deg;--c:var(--graphite);position:relative;width:44px;height:44px;border-radius:50%;cursor:ns-resize;touch-action:none;outline:none;
+  background:conic-gradient(from 225deg, #b9b9c0 0 var(--a0), var(--c) var(--a0) var(--a1), #b9b9c0 var(--a1) 270deg, transparent 270deg)}
+.knob.big .dial{width:66px;height:66px}
+.dial::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--platinum-hi)}
+.dial .cap{position:absolute;inset:6px;border-radius:50%;
+  background:radial-gradient(circle at 50% 22%, rgba(255,255,255,.95) 0 18%, rgba(255,255,255,0) 46%), radial-gradient(circle at 50% 80%, #f7f7fa, #c8c8ce 60%, #9a9aa3);
+  box-shadow:0 2px 3px rgba(0,0,0,.35), 0 0 0 1px #7d7d86}
+.knob.big .dial .cap{inset:8px}
+.dial .ptr{position:absolute;inset:6px;border-radius:50%;pointer-events:none}
+.knob.big .dial .ptr{inset:8px}
+.dial .ptr::after{content:"";position:absolute;left:50%;top:3px;width:3px;height:30%;margin-left:-1.5px;border-radius:2px;background:#1a1a1e}
+.dial:focus-visible{box-shadow:0 0 0 2px var(--blue)}
+.knob .name{font-weight:700;white-space:nowrap}
+.val{font:700 10.5px var(--ui);background:var(--inset);box-shadow:inset 0 1px 2px rgba(0,0,0,.25);border-radius:3px;padding:1px 6px;min-width:52px;text-align:center;white-space:nowrap}
+
+.seg{display:inline-flex;border:1px solid #7d7d86;border-radius:999px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.seg button{font:700 11px var(--ui);border:0;padding:4px 12px;cursor:pointer;color:#222;background:linear-gradient(#fff,#d8d8dd 48%,#c4c4ca 52%,#e6e6ea)}
+.seg button+button{border-left:1px solid #9c9ca4}
+.seg button[aria-pressed="true"]{color:#fff;text-shadow:0 -1px 0 rgba(0,0,0,.3);background:linear-gradient(#8fd8f7,var(--blue) 48%,#0086c0 52%,#38b8ea)}
+.segwrap{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;font-weight:700;padding-bottom:4px}
+
+.gel{display:inline-flex;align-items:center;padding:6px 18px;border-radius:999px;font:700 12px var(--ui);color:#fff;border:1px solid var(--blue-dk);position:relative;cursor:pointer;
+  background:linear-gradient(#8fd8f7,var(--blue) 48%,#0086c0 52%,#38b8ea);box-shadow:0 2px 4px rgba(0,0,0,.3), 0 1px 0 rgba(255,255,255,.5) inset;text-shadow:0 -1px 0 rgba(0,0,0,.3)}
+.gel::before{content:"";position:absolute;left:10px;right:10px;top:2px;height:45%;border-radius:999px;background:linear-gradient(rgba(255,255,255,.75),rgba(255,255,255,.1));pointer-events:none}
+.gel.grey{color:#222;border-color:#7d7d86;text-shadow:0 1px 0 #fff;background:linear-gradient(#fff,#d8d8dd 48%,#c4c4ca 52%,#e6e6ea)}
+.gel.red{border-color:var(--red-dk);background:linear-gradient(#f7a4a6,var(--red) 48%,#c42a2e 52%,#ee6a6d)}
+
+/* test filters */
+.aids{margin-top:12px;border-style:dashed;background:rgba(244,244,246,.55)}
+.aids legend{color:var(--ink-soft)}
+.aidrow{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center}
+.aid{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.check{display:inline-flex;align-items:center;gap:7px;font-weight:700;cursor:pointer}
+.check input{appearance:none;-webkit-appearance:none;width:16px;height:16px;margin:0;border-radius:4px;border:1px solid #7d7d86;cursor:pointer;
+  background:linear-gradient(#fff,#d8d8dd);box-shadow:0 1px 2px rgba(0,0,0,.2);position:relative}
+.check input:checked{border-color:var(--blue-dk);background:linear-gradient(#8fd8f7,var(--blue) 48%,#0086c0 52%,#38b8ea)}
+.check input:checked::after{content:"";position:absolute;left:5px;top:1px;width:4px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.check input:focus-visible{box-shadow:0 0 0 2px var(--blue)}
+.slide{display:flex;align-items:center;gap:8px;font-weight:700}
+.slide input[type=range]{-webkit-appearance:none;appearance:none;width:200px;height:6px;border-radius:3px;background:linear-gradient(#a9a9b0,#d4d4d9);box-shadow:inset 0 1px 2px rgba(0,0,0,.35);outline:none}
+.slide input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:14px;border-radius:7px;border:1px solid #7d7d86;cursor:ew-resize;
+  background:linear-gradient(#fff,#d8d8dd 48%,#c4c4ca 52%,#e6e6ea);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.slide input[type=range]::-moz-range-thumb{width:22px;height:14px;border-radius:7px;border:1px solid #7d7d86;cursor:ew-resize;background:linear-gradient(#fff,#d8d8dd 48%,#c4c4ca 52%,#e6e6ea)}
+.slide input:focus-visible{box-shadow:0 0 0 2px var(--blue)}
+.dim{opacity:.45}
+
+/* keyboard */
+.kbd{margin-top:14px;position:relative;height:118px;border-radius:6px;background:linear-gradient(#3a3a40,#1d1d22);padding:8px 8px 10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 2px 4px rgba(0,0,0,.3)}
+.keys{position:relative;height:100%}
+.key{position:absolute;top:0;bottom:0;border-radius:0 0 5px 5px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font:700 11px var(--mono);cursor:pointer;touch-action:none}
+.key.w{background:linear-gradient(#fff,#e6e6ea);border:1px solid #6e6e78;color:#6e6e78;z-index:1}
+.key.b{background:linear-gradient(#3b3b42,#111);height:62%;bottom:auto;color:#bbb;z-index:2;border:1px solid #000;font-size:10px;padding-bottom:4px}
+.key.on.w{background:linear-gradient(#ffd3d4,var(--red));color:#fff}
+.key.on.b{background:linear-gradient(#ff8b8e,var(--red-dk));color:#fff}
+.key .c{position:absolute;top:6px;font:9px var(--ui);color:#9c9ca4;font-weight:400}
+
+.foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:12px;font-size:11px;color:var(--ink-soft)}
+.foot .sp{margin-left:auto}
+.err{display:none;margin-top:10px;padding:8px 10px;border-left:4px solid var(--red);background:#fdeced;font-size:12px}
+@media (max-width:720px){ .views{grid-template-columns:1fr} .head .ver{margin-left:0} .slide input[type=range]{width:140px} }
+@media (prefers-reduced-motion: reduce){ .key{transition:none} }
+</style>
+</head>
+<body>
+<div class="window" role="application" aria-label="Throat test bench">
+  <div class="titlebar"><span class="closebox"></span><span class="lines"></span><span class="mark" aria-hidden="true"></span><span class="t">Throat</span><span class="lines"></span><span class="ver">v0.1 · Bytebent Audio</span></div>
+  <div class="body">
+    <div class="screen">
+      <div class="views">
+        <div class="view"><canvas id="glot" aria-label="Last two glottal cycles"></canvas><span class="lbl" id="glotLbl">GLOTTAL FLOW</span></div>
+        <div class="view"><canvas id="spec" aria-label="Output spectrum"></canvas><span class="lbl">SPECTRUM</span></div>
+      </div>
+      <div class="readouts" aria-live="off">
+        <span><b>F0</b><span id="roF0">—</span></span>
+        <span><b>RD</b><span id="roRd">—</span></span>
+        <span><b>OQ</b><span id="roOq">—</span></span>
+        <span><b>VOICES</b><span id="roVo">0</span></span>
+        <span><b>OCT</b><span id="roOct">C2</span></span>
+        <span><b>VEL</b><span id="roVel">100</span></span>
+      </div>
+      <div class="power" id="power">
+        <button class="gel red" id="powerBtn" type="button">Power on</button>
+      </div>
+    </div>
+
+    <div class="rows">
+      <fieldset><legend><span class="dot" style="background:var(--red)"></span>Phonation</legend><div class="knobs" id="g-phon"></div></fieldset>
+      <fieldset><legend><span class="dot"></span>Irregularity</legend><div class="knobs" id="g-irr"></div></fieldset>
+      <fieldset><legend><span class="dot"></span>Pitch</legend><div class="knobs" id="g-pitch">
+        <div class="segwrap">Voices<div class="seg" id="segMode"><button type="button" data-v="0">Mono</button><button type="button" data-v="1">Poly</button></div></div>
+      </div></fieldset>
+      <fieldset><legend><span class="dot"></span>Envelope</legend><div class="knobs" id="g-env"></div></fieldset>
+      <fieldset><legend><span class="dot"></span>Output</legend><div class="knobs" id="g-out">
+        <div class="segwrap">Source<div class="seg" id="segSrc"><button type="button" data-v="0">Flow</button><button type="button" data-v="1">Derivative</button></div></div>
+      </div></fieldset>
+    </div>
+
+    <fieldset class="aids">
+      <legend><span class="dot" style="background:#fff;box-shadow:0 0 0 1px #6e6e78 inset"></span>Test filters</legend>
+      <div class="aidrow">
+        <div class="aid">
+          <label class="check"><input type="checkbox" id="vowelOn"> Vowel</label>
+          <span class="slide" id="vowelWrap"><span>A</span><input type="range" id="vowel" min="0" max="1" step="0.001" value="0" aria-label="Vowel, A to I"><span>I</span></span>
+        </div>
+        <div class="aid">
+          <label class="check"><input type="checkbox" id="lpOn"> Low-pass</label>
+          <div class="knobs" id="g-lp"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="kbd"><div class="keys" id="keys"></div></div>
+    <div class="foot">
+      <button class="gel grey sp" id="panic" type="button">All notes off</button>
+    </div>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<script type="text/plain" id="dsp">
+/*
+ * Throat engine v0.1 · bytebent
+ *
+ * A parametric larynx. It makes every sound in the Throat/Mouth pair:
+ *   - glottal pulses from the LF (Liljencrants–Fant) model, shaped by Rd
+ *     (pressed ← 0.3 … 1.0 modal … 2.7 → breathy), output as flow or flow derivative,
+ *   - breath / turbulence noise, steady and pulsed by each glottal opening,
+ *   - per-cycle irregularity (jitter, shimmer, creak) and subharmonics (growl).
+ *
+ * Pulses and noise run at 4x the host rate and are decimated with a windowed-sinc
+ * FIR, so sharp (tense, high) pulses don't alias. process() never allocates.
+ *
+ * Works in an AudioWorklet and in Node (module.exports) for offline tests.
+ */
+(function (root) {
+  'use strict';
+
+  const OS = 4;                       // internal oversampling
+  const TN = 2048;                    // table points per glottal period
+  const TW = TN + 1;                  // stored row width (wrap point)
+  const MIP_LEVELS = 9;               // harmonic limits 1024, 512, … 4 (band-limited copies)
+  const RD_LO = 0.3, RD_HI = 2.7, RD_STEP = 0.05;
+  const RD_COUNT = Math.round((RD_HI - RD_LO) / RD_STEP) + 1;   // 49
+  const RD_MODAL = 1.0;
+  const RD_SUB = 0.45;                // false-fold (growl) pulse shape
+  const TABLE_RMS = 0.1;              // pulse level at modal voice
+  const NORM_POW = 0.7;               // how much loudness is evened out across Rd
+  const FIR_LEN = 128;                // decimation filter taps (at 4x rate)
+  const BLOCK = 32;                   // fixed internal control block (host samples) = latency
+  const MAX_VOICES = 8;
+
+  /* ---------- LF model ---------- */
+
+  // Solve the LF model for one Rd value. Period T0 = 1, excitation Ee = 1.
+  function lfSolve(Rd) {
+    const Ra = (-1 + 4.8 * Rd) / 100;
+    const Rk = (22.4 + 11.8 * Rd) / 100;
+    const Rg = 0.25 * Rk / (0.11 * Rd / (0.5 + 1.2 * Rk) - Ra);
+    const Tp = 1 / (2 * Rg), Te = Tp * (1 + Rk), Ta = Ra;
+    const d = 1 - Te;
+    let eps = 1 / Ta;
+    for (let i = 0; i < 300; i++) eps = (1 - Math.exp(-eps * d)) / Ta;
+    const wg = Math.PI / Tp, sinTe = Math.sin(wg * Te), cosTe = Math.cos(wg * Te);
+    const ed = Math.exp(-eps * d);
+    const retArea = -((1 - ed) / eps - d * ed) / (eps * Ta);
+    const openArea = a => (a * sinTe - wg * cosTe + wg * Math.exp(-a * Te)) * (-1 / sinTe) / (a * a + wg * wg);
+    // total area must be zero (flow returns to its starting value); f(a) decreases with a
+    let lo = -200, hi = 200;
+    for (let i = 0; i < 200; i++) {
+      const mid = 0.5 * (lo + hi);
+      if (openArea(mid) + retArea > 0) lo = mid; else hi = mid;
+    }
+    const a = 0.5 * (lo + hi);
+    return { Rd, Tp, Te, Ta, eps, a, wg, sinTe, ed, flowTe: openArea(a), area: openArea(a) + retArea };
+  }
+
+  // Flow and flow derivative at normalised time t in [0, 1].
+  function lfEval(p, t, out) {
+    if (t <= p.Te) {
+      const e = Math.exp(p.a * (t - p.Te));
+      const s = Math.sin(p.wg * t), c = Math.cos(p.wg * t);
+      out[1] = -e * s / p.sinTe;
+      out[0] = (e * (p.a * s - p.wg * c) + p.wg * Math.exp(-p.a * p.Te)) * (-1 / p.sinTe) / (p.a * p.a + p.wg * p.wg);
+    } else {
+      const u = t - p.Te, eu = Math.exp(-p.eps * u);
+      out[1] = -(eu - p.ed) / (p.eps * p.Ta);
+      out[0] = p.flowTe - ((1 - eu) / p.eps - u * p.ed) / (p.eps * p.Ta);
+    }
+  }
+
+  /* ---------- tables (built once) ---------- */
+
+  let TABLES = null;
+
+  function rmsOf(arr, off, n, removeMean) {
+    let m = 0;
+    if (removeMean) { for (let i = 0; i < n; i++) m += arr[off + i]; m /= n; }
+    let s = 0;
+    for (let i = 0; i < n; i++) { const v = arr[off + i] - m; s += v * v; }
+    return Math.sqrt(s / n);
+  }
+
+  function buildTables() {
+    if (TABLES) return TABLES;
+    const flowRaw = new Float64Array(RD_COUNT * TW);
+    const derivRaw = new Float64Array(RD_COUNT * TW);
+    const flow = new Float32Array(RD_COUNT * TW);
+    const deriv = new Float32Array(RD_COUNT * TW);
+    const shape = new Float32Array(RD_COUNT * TW);     // flow scaled to peak 1 (drives pulsed breath)
+    const te = new Float32Array(RD_COUNT);              // open quotient per row
+    const tmp = [0, 0];
+    for (let r = 0; r < RD_COUNT; r++) {
+      const p = lfSolve(RD_LO + r * RD_STEP);
+      te[r] = p.Te;
+      const o = r * TW;
+      for (let i = 0; i < TN; i++) {
+        lfEval(p, i / TN, tmp);
+        flowRaw[o + i] = tmp[0];
+        derivRaw[o + i] = tmp[1];
+      }
+      // tiny numerical residue: pin the period end to the start
+      const endFlow = (lfEval(p, 1, tmp), tmp[0]);
+      for (let i = 0; i < TN; i++) flowRaw[o + i] -= endFlow * (i / TN);
+      flowRaw[o + TN] = flowRaw[o];
+      derivRaw[o + TN] = derivRaw[o];
+    }
+    const ref = Math.round((RD_MODAL - RD_LO) / RD_STEP);
+    const refF = rmsOf(flowRaw, ref * TW, TN, true), refD = rmsOf(derivRaw, ref * TW, TN, false);
+    const flowMip = [], derivMip = [];
+    for (let l = 0; l < MIP_LEVELS; l++) { flowMip.push(new Float32Array(RD_COUNT * TW)); derivMip.push(new Float32Array(RD_COUNT * TW)); }
+    const re = new Float64Array(TN), im = new Float64Array(TN), sre = new Float64Array(TN), sim = new Float64Array(TN);
+    for (let r = 0; r < RD_COUNT; r++) {
+      const o = r * TW;
+      const rf = rmsOf(flowRaw, o, TN, true), rd = rmsOf(derivRaw, o, TN, false);
+      const gf = (TABLE_RMS / refF) * Math.pow(refF / rf, NORM_POW);
+      const gd = (TABLE_RMS / refD) * Math.pow(refD / rd, NORM_POW);
+      let peak = 0;
+      for (let i = 0; i < TW; i++) peak = Math.max(peak, flowRaw[o + i]);
+      for (let i = 0; i < TW; i++) {
+        flow[o + i] = flowRaw[o + i] * gf;
+        deriv[o + i] = derivRaw[o + i] * gd;
+        shape[o + i] = Math.max(0, flowRaw[o + i] / peak);
+      }
+      // band-limited copies: keep harmonics 1..H, H = 1024 >> level
+      for (let kind = 0; kind < 2; kind++) {
+        const src = kind ? deriv : flow, dst = kind ? derivMip : flowMip;
+        for (let i = 0; i < TN; i++) { sre[i] = src[o + i]; sim[i] = 0; }
+        fft(sre, sim, false);
+        for (let l = 0; l < MIP_LEVELS; l++) {
+          const H = (TN / 2) >> l;
+          for (let i = 0; i < TN; i++) { re[i] = 0; im[i] = 0; }
+          re[0] = sre[0];
+          for (let k = 1; k <= H && k < TN / 2; k++) {
+            re[k] = sre[k]; im[k] = sim[k]; re[TN - k] = sre[TN - k]; im[TN - k] = sim[TN - k];
+          }
+          if (H >= TN / 2) { re[TN / 2] = sre[TN / 2]; }
+          fft(re, im, true);
+          const d = dst[l];
+          for (let i = 0; i < TN; i++) d[o + i] = re[i] / TN;
+          d[o + TN] = d[o];
+        }
+      }
+    }
+    // Thin: an almost-sine pulse (raised cosine flow over the whole period)
+    const sFlow = new Float32Array(TW), sDeriv = new Float32Array(TW), sShape = new Float32Array(TW);
+    for (let i = 0; i < TW; i++) {
+      const t = i / TN;
+      sShape[i] = 0.5 * (1 - Math.cos(2 * Math.PI * t));
+      sFlow[i] = sShape[i];
+      sDeriv[i] = Math.PI * Math.sin(2 * Math.PI * t);
+    }
+    const thinLevel = 0.8 * TABLE_RMS;
+    const g1 = thinLevel / rmsOf(sFlow, 0, TN, true), g2 = thinLevel / rmsOf(sDeriv, 0, TN, false);
+    for (let i = 0; i < TW; i++) { sFlow[i] *= g1; sDeriv[i] *= g2; }
+    TABLES = { flow, deriv, shape, te, sFlow, sDeriv, sShape, flowMip, derivMip };
+    return TABLES;
+  }
+
+  // in-place radix-2 FFT (table building only)
+  function fft(re, im, inverse) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) {
+      let bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+      const ang = (inverse ? 2 : -2) * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang), h = len >> 1;
+      for (let i = 0; i < n; i += len) {
+        let cr = 1, ci = 0;
+        for (let j = 0; j < h; j++) {
+          const a = i + j, b = a + h;
+          const vr = re[b] * cr - im[b] * ci, vi = re[b] * ci + im[b] * cr;
+          re[b] = re[a] - vr; im[b] = im[a] - vi; re[a] += vr; im[a] += vi;
+          const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t;
+        }
+      }
+    }
+  }
+
+  // pick the band-limited table for a pulse lasting `len` samples at the 4x rate:
+  // harmonics may reach (4x rate − host Nyquist); above that they would fold into the audible band
+  function mipLevel(len) {
+    const maxH = len * (1 - 0.5 / OS);
+    let l = 0, H = TN / 2;
+    while (H > maxH && l < MIP_LEVELS - 1) { H >>= 1; l++; }
+    return l;
+  }
+
+  /* ---------- decimation filter ---------- */
+
+  function designFir() {
+    const h = new Float32Array(FIR_LEN);
+    const fc = 0.5 / OS;                // cutoff at the host Nyquist, in cycles per 4x sample
+    const M = FIR_LEN - 1;
+    let sum = 0;
+    for (let i = 0; i < FIR_LEN; i++) {
+      const x = i - M / 2;
+      const sinc = x === 0 ? 2 * fc : Math.sin(2 * Math.PI * fc * x) / (Math.PI * x);
+      const w = 0.42 - 0.5 * Math.cos(2 * Math.PI * i / M) + 0.08 * Math.cos(4 * Math.PI * i / M);
+      h[i] = sinc * w;
+      sum += h[i];
+    }
+    for (let i = 0; i < FIR_LEN; i++) h[i] /= sum;
+    return h;
+  }
+
+  /* ---------- parameters ---------- */
+
+  const PARAMS = {
+    voicing:   { def: 1,     min: 0,    max: 1 },
+    breathy:   { def: 0,     min: 0,    max: 1 },
+    tense:     { def: 0,     min: 0,    max: 1 },
+    creaky:    { def: 0,     min: 0,    max: 1 },
+    thin:      { def: 0,     min: 0,    max: 1 },
+    growl:     { def: 0,     min: 0,    max: 1 },
+    jitter:    { def: 0,     min: 0,    max: 1 },
+    shimmer:   { def: 0,     min: 0,    max: 1 },
+    transpose: { def: 0,     min: -24,  max: 24 },     // semitones
+    detune:    { def: 0,     min: -100, max: 100 },    // cents
+    mode:      { def: 0,     min: 0,    max: 1 },      // 0 mono, 1 poly
+    glide:     { def: 0.06,  min: 0,    max: 2 },      // seconds (mono only)
+    attack:    { def: 0.02,  min: 0.001, max: 5 },
+    decay:     { def: 0.3,   min: 0.001, max: 5 },
+    sustain:   { def: 0.8,   min: 0,    max: 1 },
+    release:   { def: 0.25,  min: 0.001, max: 8 },
+    volume:    { def: -6,    min: -48,  max: 6 },      // dB
+    source:    { def: 0,     min: 0,    max: 1 },      // 0 flow, 1 derivative
+  };
+
+  // Breath noise colour: soft /h/ = white low-passed at 2.5 kHz, bright whisper = white high-passed
+  // at 1.8 kHz; both through a gentle 7 kHz roll-off. Gains level-match them (measured offline).
+  const NOISE_SOFT_HZ = 2500, NOISE_BRIGHT_HZ = 1800, NOISE_AIR_HZ = 7000;
+  const NOISE_SOFT_GAIN = 0.89, NOISE_BRIGHT_GAIN = 0.6;
+  const ROUGH_HZ = 45;
+
+  /* ---------- voice ---------- */
+
+  class Voice {
+    constructor(eng, seed) {
+      this.e = eng;
+      this.seed = seed >>> 0 || 1;
+      this.rng = this.seed;
+      this.reset();
+    }
+    reset() {
+      this.stage = 0;            // 0 idle, 1 attack, 2 decay, 3 sustain, 4 release
+      this.env = 0;
+      this.note = -1;
+      this.held = false;
+      this.vel = 1;
+      this.age = 0;
+      this.logF = Math.log(110);
+      this.glideLeft = 0;
+      this.glideStep = 0;
+      this.hasPitch = false;
+      this.cyc = 0;              // samples (4x) elapsed in the current cycle
+      this.per = 0;              // cycle length (4x samples, fractional)
+      this.pulse = 1;            // open+return length inside the cycle
+      this.inc = 1;
+      this.cycleN = 0;
+      this.amp = 1;
+      this.ri = 0; this.rf = 0; this.sm = 0;
+      this.tab = null; this.sTab = null; this.subTab = null;
+      this.subPos = 0;
+      this.n1 = 0; this.n2 = 0; this.n3 = 0; this.rough = 0;
+      this.lastF0 = 0; this.lastRd = RD_MODAL; this.lastOq = 0;
+    }
+    rand() {
+      let x = this.rng;
+      x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
+      this.rng = x >>> 0;
+      return this.rng / 4294967296;
+    }
+    gauss() { return (this.rand() + this.rand() + this.rand() + this.rand() - 2) * 1.7320508; }
+
+    get active() { return this.stage !== 0; }
+
+    setTarget(note, glide) {
+      const target = Math.log(440) + (note - 69) * Math.LN2 / 12;
+      this.note = note;
+      const gs = this.e.p.glide;
+      if (glide && gs > 0 && this.hasPitch) {
+        this.glideLeft = Math.max(1, Math.round(gs * this.e.sr));
+        this.glideStep = (target - this.logF) / this.glideLeft;
+      } else {
+        this.logF = target;
+        this.glideLeft = 0;
+      }
+      this.hasPitch = true;
+    }
+
+    trigger(vel) {
+      this.vel = vel;
+      if (this.stage === 0) {     // starting from silence: begin a fresh cycle
+        this.cyc = 0; this.per = 0; this.cycleN = 0; this.env = 0;
+      }
+      this.stage = 1;
+      this.age = ++this.e.ageCounter;
+    }
+
+    release() { if (this.stage !== 0) this.stage = 4; }
+
+    startCycle() {
+      const e = this.e, P = e.p, T = e.tables;
+      let f0 = Math.exp(this.logF + e.pitchLog);
+      if (f0 < 20) f0 = 20; else if (f0 > 2500) f0 = 2500;
+      const k = this.cycleN++;
+      let per = e.srOS / f0;
+      let amp = 1;
+      if (P.jitter > 0) per *= 1 + P.jitter * 0.05 * this.gauss();
+      const growl = e.s.growl, creak = e.s.creaky;
+      if (growl > 0) {
+        per *= 1 + ((k & 1) ? -1 : 1) * growl * 0.12;
+        if (k & 1) amp *= 1 - 0.55 * growl;
+      }
+      let pulse = per;
+      if (creak > 0) {
+        pulse = per * (1 - 0.45 * creak);
+        per = per * (1 + creak * 0.35 * Math.abs(this.gauss()));
+        if (this.rand() < creak * 0.3) per *= 1.4 + this.rand() * 1.2 * creak;
+        if (k & 1) amp *= 1 - 0.5 * creak * (0.6 + 0.4 * this.rand());
+        amp *= 1 + 0.9 * creak;          // fewer pulses per second: keep fry roughly as loud
+      }
+      if (P.shimmer > 0) amp *= Math.exp(P.shimmer * 0.25 * this.gauss());
+      if (pulse < 8) pulse = 8;
+      if (per < pulse) per = pulse;
+
+      // pulse shape for this cycle
+      const rdx = (Math.exp(e.lnRd) - RD_LO) / RD_STEP;
+      let ri = Math.floor(rdx);
+      if (ri < 0) ri = 0; else if (ri > RD_COUNT - 2) ri = RD_COUNT - 2;
+      let rf = rdx - ri; if (rf < 0) rf = 0; else if (rf > 1) rf = 1;
+      this.ri = ri; this.rf = rf; this.sm = e.sineMix;
+      const deriv = e.sourceDeriv;
+      const lvl = mipLevel(pulse);
+      this.tab = deriv ? T.derivMip[lvl] : T.flowMip[lvl];
+      this.subTab = deriv ? T.derivMip[mipLevel(per * 2)] : T.flowMip[mipLevel(per * 2)];
+      this.sTab = deriv ? T.sDeriv : T.sFlow;
+      this.amp = amp;
+      this.inc = 1 / pulse;
+      this.pulse = pulse;
+      this.per = per;
+      this.lastF0 = e.srOS / per;
+      this.lastRd = Math.exp(e.lnRd);
+      const oq = (T.te[ri] + (T.te[ri + 1] - T.te[ri]) * rf) * (1 - this.sm) + this.sm;
+      this.lastOq = oq * pulse / per;
+      if (this === e.vizVoice) e.vizCycle();
+    }
+
+    render(n) {
+      const e = this.e, P = e.p, T = e.tables, buf = e.osBuf;
+      const shapeT = T.shape, sShape = T.sShape;
+      const subRow = e.subRow * TW;
+      const isViz = this === e.vizVoice;
+      const sr = e.sr;
+      const aInc = 1 / (Math.max(P.attack, 0.001) * sr);
+      const dCoef = Math.exp(-4.6 / (Math.max(P.decay, 0.001) * sr));
+      const rCoef = Math.exp(-4.6 / (Math.max(P.release, 0.001) * sr));
+      const S = P.sustain;
+      const rVoic = e.rVoicing, rSt = e.rSteady, rPu = e.rPulse, rBr = e.rBright, rGr = e.rGrowl;
+      const a1 = e.nA1, a2 = e.nA2, a3 = e.nA3, ar = e.rA, roughG = e.roughGain;
+      const g1 = e.nG1, g2 = e.nG2;
+      let o = 0;
+      for (let j = 0; j < n; j++) {
+        // envelope (host rate)
+        switch (this.stage) {
+          case 1: this.env += aInc; if (this.env >= 1) { this.env = 1; this.stage = 2; } break;
+          case 2: this.env = S + (this.env - S) * dCoef; if (Math.abs(this.env - S) < 1e-4) { this.env = S; this.stage = 3; } break;
+          case 3: this.env = S; break;
+          case 4: this.env *= rCoef; if (this.env < 1e-5) { this.env = 0; this.stage = 0; } break;
+        }
+        if (this.glideLeft > 0) { this.logF += this.glideStep; this.glideLeft--; }
+        const gain = this.env * this.vel;
+        const voicing = rVoic[j], steady = rSt[j], pulsed = rPu[j], bright = rBr[j], growl = rGr[j];
+        const subInc = Math.exp(this.logF + e.pitchLog) * 0.5 / e.srOS;
+        for (let q = 0; q < OS; q++, o++) {
+          if (this.cyc >= this.per) {
+            this.cyc -= this.per;
+            this.startCycle();
+            if (this.cyc >= this.per) this.cyc = 0;
+          }
+          let g = 0, sh = 0;
+          if (this.cyc < this.pulse) {
+            const x = this.cyc * this.inc * TN, i = x | 0, fr = x - i;
+            const b0 = this.ri * TW + i, b1 = b0 + TW;
+            const tab = this.tab;
+            const v0 = tab[b0] + (tab[b0 + 1] - tab[b0]) * fr;
+            const v1 = tab[b1] + (tab[b1 + 1] - tab[b1]) * fr;
+            let v = v0 + (v1 - v0) * this.rf;
+            sh = shapeT[b0] + (shapeT[b0 + 1] - shapeT[b0]) * fr;
+            if (this.sm > 0) {
+              const st = this.sTab;
+              const s = st[i] + (st[i + 1] - st[i]) * fr;
+              v += (s - v) * this.sm;
+              const ss = sShape[i] + (sShape[i + 1] - sShape[i]) * fr;
+              sh += (ss - sh) * this.sm;
+            }
+            g = v * this.amp;
+          }
+          this.cyc += 1;
+          const w = this.rand() * 2 - 1;
+          let rough = 0;
+          if (growl > 0) {
+            this.rough += (w - this.rough) * ar;
+            rough = this.rough * roughG;
+            if (rough > 2.5) rough = 2.5; else if (rough < -2.5) rough = -2.5;
+            let gm = 1 + growl * 0.35 * rough;
+            if (gm < 0) gm = 0;
+            g *= gm;
+            // false-fold pulse train an octave below
+            this.subPos += subInc;
+            if (this.subPos >= 1) this.subPos -= 1;
+            const sx = this.subPos * TN, si = sx | 0, sf = sx - si;
+            const st = this.subTab || T.flow;
+            g += (st[subRow + si] + (st[subRow + si + 1] - st[subRow + si]) * sf) * growl * 0.4 * (1 + 0.25 * rough);
+          }
+          // breath noise: soft /h/ ↔ bright whisper, steady + pulsed by the glottal opening
+          this.n1 += (w - this.n1) * a1;
+          this.n2 += (w - this.n2) * a2;
+          const soft = this.n1 * g1, hi = (w - this.n2) * g2;
+          this.n3 += (soft + (hi - soft) * bright - this.n3) * a3;   // gentle air roll-off
+          const noise = this.n3;
+          const nAmp = steady + pulsed * sh;
+          const voiced = g * voicing;
+          buf[o] += (voiced + noise * nAmp) * gain;
+          if (isViz) e.vizPush(voiced, nAmp);
+        }
+      }
+    }
+  }
+
+  /* ---------- engine ---------- */
+
+  function ramp(arr, a, b, n) {
+    const st = (b - a) / n;
+    for (let j = 0; j < n; j++) arr[j] = a + st * (j + 1);
+    return b;
+  }
+
+  class ThroatEngine {
+    constructor(sampleRate, seed) {
+      this.sr = sampleRate;
+      this.srOS = sampleRate * OS;
+      this.tables = buildTables();
+      this.subRow = Math.round((RD_SUB - RD_LO) / RD_STEP);
+      this.p = {};
+      for (const k in PARAMS) this.p[k] = PARAMS[k].def;
+      this.s = { voicing: 1, breathy: 0, tense: 0, creaky: 0, thin: 0, growl: 0 };   // smoothed knobs
+      this.smoothCoef = 1 - Math.exp(-BLOCK / (0.02 * sampleRate));
+      this.lnRd = Math.log(RD_MODAL); this.sineMix = 0; this.sourceDeriv = false;
+      this.pitchLog = 0;
+      this.voices = [];
+      const base = (seed >>> 0) || 0x9e3779b9;
+      for (let i = 0; i < MAX_VOICES; i++) this.voices.push(new Voice(this, (base + i * 0x6d2b79f5) >>> 0));
+      this.ageCounter = 0;
+      this.stack = [];           // mono note stack (preallocated use only via push/splice of small ints)
+      this.osBuf = new Float32Array(BLOCK * OS);
+      this.blk = new Float32Array(BLOCK); this.blkPos = BLOCK;
+      this.rVoicing = new Float32Array(BLOCK); this.rSteady = new Float32Array(BLOCK);
+      this.rPulse = new Float32Array(BLOCK); this.rBright = new Float32Array(BLOCK);
+      this.rGrowl = new Float32Array(BLOCK); this.rVol = new Float32Array(BLOCK);
+      this.cur = { voicing: 1, steady: 0, pulse: 0, bright: 0.35, growl: 0, vol: Math.pow(10, PARAMS.volume.def / 20) };
+      // noise filters (at the 4x rate)
+      const op = hz => 1 - Math.exp(-2 * Math.PI * hz / this.srOS);
+      this.nA1 = op(NOISE_SOFT_HZ); this.nA2 = op(NOISE_BRIGHT_HZ); this.nA3 = op(NOISE_AIR_HZ); this.rA = op(ROUGH_HZ);
+      const sdU = 1 / Math.sqrt(3);
+      this.roughGain = 1 / (sdU * Math.sqrt(this.rA / (2 - this.rA)));
+      this.nG1 = NOISE_SOFT_GAIN;
+      this.nG2 = NOISE_BRIGHT_GAIN;
+      // decimator
+      this.fir = designFir();
+      this.hist = new Float32Array(FIR_LEN * 2);
+      this.hw = 0;
+      // DC blocker
+      this.dcR = 1 - 2 * Math.PI * 20 / sampleRate;
+      this.dcX = 0; this.dcY = 0;
+      // live view capture
+      this.vizVoice = null;
+      this.capG = new Float32Array(65536); this.capN = new Float32Array(65536);
+      this.capLen = 0; this.capCycles = 0;
+      this.vizG = new Float32Array(256); this.vizN = new Float32Array(256);
+      this.vizReady = false; this.vizInfo = { f0: 0, rd: 1, oq: 0, voices: 0 };
+    }
+
+    setParam(id, v) {
+      const d = PARAMS[id];
+      if (!d) return;
+      v = +v;
+      if (!(v === v)) return;
+      if (v < d.min) v = d.min; else if (v > d.max) v = d.max;
+      if (id === 'mode') {
+        v = v >= 0.5 ? 1 : 0;
+        if (v !== this.p.mode) { this.allNotesOff(); this.stack.length = 0; }
+      }
+      if (id === 'source') v = v >= 0.5 ? 1 : 0;
+      this.p[id] = v;
+    }
+
+    velAmp(vel) { const v = Math.max(1, Math.min(127, vel)) / 127; return v; }
+
+    noteOn(note, vel) {
+      const va = this.velAmp(vel == null ? 100 : vel);
+      if (this.p.mode === 0) {
+        const v = this.voices[0];
+        const legato = this.stack.length > 0;
+        const i = this.stack.indexOf(note);
+        if (i >= 0) this.stack.splice(i, 1);
+        this.stack.push(note);
+        v.setTarget(note, true);
+        if (!legato || v.stage === 0 || v.stage === 4) v.trigger(va); else v.vel = va;
+        this.vizVoice = v;
+      } else {
+        let v = null;
+        for (const x of this.voices) if (x.active && x.note === note) { v = x; break; }
+        if (!v) for (const x of this.voices) if (!x.active) { v = x; break; }
+        if (!v) {   // steal: quietest releasing voice, else the oldest
+          let best = null;
+          for (const x of this.voices) if (x.stage === 4 && (!best || x.env < best.env)) best = x;
+          if (!best) for (const x of this.voices) if (!best || x.age < best.age) best = x;
+          v = best;
+        }
+        v.setTarget(note, false);
+        v.held = true;
+        v.trigger(va);
+        this.vizVoice = v;
+      }
+    }
+
+    noteOff(note) {
+      if (this.p.mode === 0) {
+        const v = this.voices[0];
+        const i = this.stack.indexOf(note);
+        if (i < 0) return;
+        this.stack.splice(i, 1);
+        if (this.stack.length === 0) v.release();
+        else if (v.note === note) v.setTarget(this.stack[this.stack.length - 1], true);
+      } else {
+        for (const x of this.voices) if (x.held && x.note === note) { x.held = false; x.release(); }
+      }
+    }
+
+    allNotesOff() {
+      this.stack.length = 0;
+      for (const x of this.voices) { x.held = false; x.release(); }
+    }
+
+    // per-block parameter smoothing and derived values
+    updateBlock(n) {
+      const P = this.p, s = this.s, c = this.smoothCoef;
+      for (const k in s) s[k] += (P[k] - s[k]) * c;
+      // Rd: tense presses toward 0.3, breathy opens toward 2.7, thin and creak bend it too
+      let ln = Math.log(RD_MODAL) + s.breathy * Math.log(2.7) + s.tense * Math.log(0.3)
+             + s.creaky * Math.log(0.5) + s.thin * Math.log(2.0);
+      const lo = Math.log(RD_LO), hi = Math.log(RD_HI);
+      this.lnRd = ln < lo ? lo : ln > hi ? hi : ln;
+      this.sineMix = s.thin * 0.85;
+      this.sourceDeriv = P.source === 1;
+      this.pitchLog = (P.transpose + P.detune / 100) * Math.LN2 / 12;
+      // breath
+      const vo = s.voicing;
+      let bright = 0.35 + 0.55 * s.tense - 0.3 * s.breathy + 0.25 * s.thin;
+      bright = bright < 0 ? 0 : bright > 1 ? 1 : bright;
+      const steady = (1 - vo) * 1.0 + vo * (s.breathy * 0.05 + s.thin * 0.03);
+      const pulse = vo * (s.breathy * 0.3 + s.thin * 0.12);
+      const cur = this.cur;
+      cur.voicing = ramp(this.rVoicing, cur.voicing, vo, n);
+      cur.steady = ramp(this.rSteady, cur.steady, steady, n);
+      cur.pulse = ramp(this.rPulse, cur.pulse, pulse, n);
+      cur.bright = ramp(this.rBright, cur.bright, bright, n);
+      cur.growl = ramp(this.rGrowl, cur.growl, s.growl, n);
+      cur.vol = ramp(this.rVol, cur.vol, Math.pow(10, P.volume / 20), n);
+    }
+
+    // Host calls with any n; the engine always works in fixed BLOCK chunks (BLOCK samples latency).
+    process(out, n) {
+      const blk = this.blk;
+      let p = this.blkPos;
+      for (let j = 0; j < n; j++) {
+        if (p === BLOCK) { this.processBlock(blk, 0, BLOCK); p = 0; }
+        out[j] = blk[p++];
+      }
+      this.blkPos = p;
+    }
+
+    processBlock(out, off, n) {
+      this.updateBlock(n);
+      const buf = this.osBuf;
+      buf.fill(0, 0, n * OS);
+      let count = 0;
+      for (let i = 0; i < this.voices.length; i++) {
+        const v = this.voices[i];
+        if (v.stage !== 0) { v.render(n); count++; }
+      }
+      if (this.vizVoice && this.vizVoice.stage === 0) this.vizVoice = null;
+      this.vizInfo.voices = count;
+      const h = this.fir, hist = this.hist, L = FIR_LEN, vol = this.rVol;
+      let hw = this.hw, x1 = this.dcX, y1 = this.dcY;
+      const R = this.dcR;
+      for (let j = 0, o = 0; j < n; j++) {
+        for (let q = 0; q < OS; q++, o++) {
+          const x = buf[o];
+          hist[hw] = x; hist[hw + L] = x;
+          hw = hw + 1 === L ? 0 : hw + 1;
+        }
+        let acc = 0;
+        for (let t = 0; t < L; t++) acc += h[t] * hist[hw + t];
+        const y = acc - x1 + R * y1;
+        x1 = acc; y1 = y;
+        let s = y * vol[j];
+        if (s > 1) s = 1; else if (s < -1) s = -1;
+        out[off + j] = s;
+      }
+      this.hw = hw; this.dcX = x1; this.dcY = y1;
+      if (Math.abs(this.dcY) < 1e-20) this.dcY = 0;
+    }
+
+    /* live view: record the latest voice's glottal signal, hand over 2 cycles at a time */
+    vizPush(g, nAmp) {
+      if (this.capLen < this.capG.length) {
+        this.capG[this.capLen] = g; this.capN[this.capLen] = nAmp; this.capLen++;
+      }
+    }
+    vizCycle() {
+      this.capCycles++;
+      if (this.capCycles >= 3) {     // first boundary starts capture; two full cycles after that
+        const len = this.capLen;
+        if (len > 16) {
+          for (let b = 0; b < 256; b++) {
+            const i0 = Math.floor(b * len / 256), i1 = Math.max(i0 + 1, Math.floor((b + 1) * len / 256));
+            let mx = 0;
+            for (let i = i0; i < i1; i++) if (this.capN[i] > mx) mx = this.capN[i];
+            this.vizG[b] = this.capG[i0];
+            this.vizN[b] = mx;
+          }
+          const v = this.vizVoice;
+          this.vizInfo.f0 = v.lastF0; this.vizInfo.rd = v.lastRd; this.vizInfo.oq = v.lastOq;
+          this.vizReady = true;
+        }
+        this.capLen = 0; this.capCycles = 1;
+      }
+    }
+  }
+
+  ThroatEngine.PARAMS = PARAMS;
+  ThroatEngine.OS = OS;
+  ThroatEngine.LATENCY = BLOCK;
+  ThroatEngine.lfSolve = lfSolve;
+  ThroatEngine.buildTables = buildTables;
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = { ThroatEngine, lfSolve, lfEval, buildTables, PARAMS };
+  else root.ThroatEngine = ThroatEngine;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+/*
+ * Test filters for the Throat bench. NOT part of Throat: listening aids only, so a bare
+ * larynx can be judged. Both switch on and off with a short crossfade.
+ *   - Vowel: four cascaded formant resonators, one slider morphing from A to I.
+ *   - Low-pass: a 12 dB/oct state-variable filter with cutoff and resonance.
+ */
+(function (root) {
+  'use strict';
+
+  // male formants (Hz) and bandwidths, roughly Peterson & Barney
+  const VOWEL_A = { f: [730, 1090, 2440, 3400], bw: [80, 90, 120, 250] };
+  const VOWEL_I = { f: [270, 2290, 3010, 3500], bw: [60, 100, 150, 250] };
+  const SUB = 32;                     // coefficient update interval (samples)
+  const VOWEL_GAIN = [0.66, 0.46];          // level match at A and I (measured in tests)
+
+  class TestFilters {
+    constructor(sr) {
+      this.sr = sr;
+      this.vowelOn = false; this.vowel = 0;
+      this.lpOn = false; this.cutoff = 3000; this.res = 0.1;
+      this.vWet = 0; this.lWet = 0;
+      this.vMix = 0;                  // smoothed vowel position
+      this.lnCut = Math.log(3000); this.resS = 0.1;
+      this.ry1 = new Float64Array(4); this.ry2 = new Float64Array(4);
+      this.ra = new Float64Array(4); this.rb = new Float64Array(4); this.rc = new Float64Array(4);
+      this.ic1 = 0; this.ic2 = 0;
+      this.fade = 1 - Math.exp(-1 / (0.015 * sr));
+      this.smooth = 1 - Math.exp(-SUB / (0.03 * sr));
+      this.makeup = 1;
+      this.updateVowel(true);
+    }
+
+    set(id, v) {
+      if (id === 'vowelOn') this.vowelOn = !!v;
+      else if (id === 'vowel') this.vowel = Math.min(1, Math.max(0, +v || 0));
+      else if (id === 'lpOn') this.lpOn = !!v;
+      else if (id === 'cutoff') this.cutoff = Math.min(16000, Math.max(60, +v || 3000));
+      else if (id === 'res') this.res = Math.min(1, Math.max(0, +v || 0));
+    }
+
+    updateVowel(snap) {
+      this.vMix = snap ? this.vowel : this.vMix + (this.vowel - this.vMix) * this.smooth;
+      const t = this.vMix, sr = this.sr;
+      for (let k = 0; k < 4; k++) {
+        const f = Math.exp(Math.log(VOWEL_A.f[k]) * (1 - t) + Math.log(VOWEL_I.f[k]) * t);
+        const bw = VOWEL_A.bw[k] * (1 - t) + VOWEL_I.bw[k] * t;
+        // Klatt resonator: unity gain at DC
+        const C = -Math.exp(-2 * Math.PI * bw / sr);
+        const B = 2 * Math.exp(-Math.PI * bw / sr) * Math.cos(2 * Math.PI * f / sr);
+        const A = 1 - B - C;
+        this.ra[k] = A; this.rb[k] = B; this.rc[k] = C;
+      }
+      // keep the cascade's loudness roughly level across the slider
+      this.makeup = Math.exp(Math.log(VOWEL_GAIN[0]) * (1 - t) + Math.log(VOWEL_GAIN[1]) * t);
+    }
+
+    process(buf, n) {
+      const vOnT = this.vowelOn ? 1 : 0, lOnT = this.lpOn ? 1 : 0;
+      if (this.vWet === 0 && this.lWet === 0 && !vOnT && !lOnT) return;
+      const fade = this.fade;
+      for (let s = 0; s < n; s += SUB) {
+        const m = Math.min(SUB, n - s);
+        this.updateVowel(false);
+        this.lnCut += (Math.log(this.cutoff) - this.lnCut) * this.smooth;
+        this.resS += (this.res - this.resS) * this.smooth;
+        let fc = Math.exp(this.lnCut); if (fc > this.sr * 0.45) fc = this.sr * 0.45;
+        const g = Math.tan(Math.PI * fc / this.sr);
+        const k = 2 - 1.96 * this.resS;          // damping: Q from 0.5 to 25
+        const a1 = 1 / (1 + g * (g + k)), a2 = g * a1, a3 = g * a2;
+        const ra = this.ra, rb = this.rb, rc = this.rc, y1 = this.ry1, y2 = this.ry2, mk = this.makeup;
+        for (let j = s; j < s + m; j++) {
+          let x = buf[j];
+          this.vWet += (vOnT - this.vWet) * fade;
+          this.lWet += (lOnT - this.lWet) * fade;
+          if (this.vWet > 1e-4 || vOnT) {
+            let y = x;
+            for (let r = 0; r < 4; r++) {
+              const o = ra[r] * y + rb[r] * y1[r] + rc[r] * y2[r];
+              y2[r] = y1[r]; y1[r] = o; y = o;
+            }
+            x = x + (y * mk - x) * this.vWet;
+          } else if (this.vWet !== 0) { this.vWet = 0; y1.fill(0); y2.fill(0); }
+          if (this.lWet > 1e-4 || lOnT) {
+            const v3 = x - this.ic2;
+            const v1 = a1 * this.ic1 + a2 * v3;
+            const v2 = this.ic2 + a2 * this.ic1 + a3 * v3;
+            this.ic1 = 2 * v1 - this.ic1; this.ic2 = 2 * v2 - this.ic2;
+            x = x + (v2 - x) * this.lWet;
+          } else if (this.lWet !== 0) { this.lWet = 0; this.ic1 = 0; this.ic2 = 0; }
+          if (x > 1) x = 1; else if (x < -1) x = -1;
+          buf[j] = x;
+        }
+      }
+    }
+  }
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = { TestFilters };
+  else root.TestFilters = TestFilters;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+/* AudioWorklet wrapper: Throat engine → test filters → output. Runs after throat-engine.js and test-filters.js. */
+class ThroatProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.eng = new ThroatEngine(sampleRate, 1234);
+    this.flt = new TestFilters(sampleRate);
+    this.vizEvery = Math.round(sampleRate / 30);
+    this.vizCount = 0;
+    this.port.onmessage = (e) => {
+      const m = e.data;
+      if (m.t === 'p') this.eng.setParam(m.id, m.v);
+      else if (m.t === 'f') this.flt.set(m.id, m.v);
+      else if (m.t === 'on') this.eng.noteOn(m.n, m.v);
+      else if (m.t === 'off') this.eng.noteOff(m.n);
+      else if (m.t === 'panic') this.eng.allNotesOff();
+    };
+    this.port.postMessage({ t: 'ready', sr: sampleRate, latency: ThroatEngine.LATENCY });
+  }
+  process(inputs, outputs) {
+    const out = outputs[0], ch0 = out[0], n = ch0.length;
+    this.eng.process(ch0, n);
+    this.flt.process(ch0, n);
+    for (let c = 1; c < out.length; c++) out[c].set(ch0);
+    this.vizCount += n;
+    if (this.vizCount >= this.vizEvery) {
+      this.vizCount = 0;
+      const e = this.eng, info = e.vizInfo;
+      if (e.vizReady) {
+        e.vizReady = false;
+        this.port.postMessage({ t: 'viz', g: e.vizG.slice(), n: e.vizN.slice(), f0: info.f0, rd: info.rd, oq: info.oq, voices: info.voices });
+      } else {
+        this.port.postMessage({ t: 'stat', voices: info.voices });
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('throat-processor', ThroatProcessor);
+
+</script>
+<script>
+(function () {
+  'use strict';
+  /* ---------- parameter specs (ranges match throat-engine.js) ---------- */
+  const pct = v => Math.round(v * 100) + '%';
+  const secs = v => v < 1 ? Math.round(v * 1000) + ' ms' : v.toFixed(2) + ' s';
+  const SPECS = [
+    { g: 'g-phon', id: 'voicing', name: 'Voicing', min: 0, max: 1, def: 1, fmt: v => v <= 0.001 ? 'Voiceless' : v >= 0.999 ? 'Voiced' : pct(v), big: true, c: 'var(--red)' },
+    { g: 'g-phon', id: 'breathy', name: 'Breathy', min: 0, max: 1, def: 0, fmt: pct, c: 'var(--red)' },
+    { g: 'g-phon', id: 'tense', name: 'Tense', min: 0, max: 1, def: 0, fmt: pct, c: 'var(--red)' },
+    { g: 'g-phon', id: 'creaky', name: 'Creaky', min: 0, max: 1, def: 0, fmt: pct, c: 'var(--red)' },
+    { g: 'g-phon', id: 'thin', name: 'Thin', min: 0, max: 1, def: 0, fmt: pct, c: 'var(--red)' },
+    { g: 'g-phon', id: 'growl', name: 'Growl', min: 0, max: 1, def: 0, fmt: pct, c: 'var(--red)' },
+    { g: 'g-irr', id: 'jitter', name: 'Jitter', min: 0, max: 1, def: 0, fmt: pct },
+    { g: 'g-irr', id: 'shimmer', name: 'Shimmer', min: 0, max: 1, def: 0, fmt: pct },
+    { g: 'g-pitch', id: 'transpose', name: 'Transpose', min: -24, max: 24, def: 0, step: 1, bipolar: true, fmt: v => (v > 0 ? '+' : '') + Math.round(v) + ' st' },
+    { g: 'g-pitch', id: 'detune', name: 'Detune', min: -100, max: 100, def: 0, bipolar: true, fmt: v => (v > 0 ? '+' : '') + Math.round(v) + ' ct' },
+    { g: 'g-pitch', id: 'glide', name: 'Glide', min: 0, max: 2, def: 0.06, curve: 3, fmt: v => v < 0.0015 ? 'Off' : secs(v) },
+    { g: 'g-env', id: 'attack', name: 'Attack', min: 0.001, max: 5, def: 0.02, curve: 3, fmt: secs },
+    { g: 'g-env', id: 'decay', name: 'Decay', min: 0.001, max: 5, def: 0.3, curve: 3, fmt: secs },
+    { g: 'g-env', id: 'sustain', name: 'Sustain', min: 0, max: 1, def: 0.8, fmt: pct },
+    { g: 'g-env', id: 'release', name: 'Release', min: 0.001, max: 8, def: 0.25, curve: 3, fmt: secs },
+    { g: 'g-out', id: 'volume', name: 'Volume', min: -48, max: 6, def: -6, fmt: v => (v > 0 ? '+' : '') + v.toFixed(1) + ' dB' },
+    { g: 'g-lp', id: 'cutoff', name: 'Cutoff', min: 60, max: 16000, def: 3000, log: true, filter: true, fmt: v => v < 1000 ? Math.round(v) + ' Hz' : (v / 1000).toFixed(v < 10000 ? 2 : 1) + ' kHz' },
+    { g: 'g-lp', id: 'res', name: 'Resonance', min: 0, max: 1, def: 0.1, filter: true, fmt: pct },
+  ];
+
+  /* ---------- audio ---------- */
+  let ctx = null, node = null, analyser = null, ready = false, starting = null;
+  const state = {};            // current values by id
+  const queue = [];
+  function send(msg) { if (ready) node.port.postMessage(msg); else queue.push(msg); }
+  function showError(t) { const e = document.getElementById('err'); e.style.display = 'block'; e.textContent = t; }
+
+  function start() {
+    if (starting) return starting;
+    starting = (async () => {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        ctx = new AC({ latencyHint: 'interactive' });
+        if (!ctx.audioWorklet) throw new Error('This browser has no AudioWorklet support. Try a current Chrome, Edge, Firefox or Safari.');
+        const src = document.getElementById('dsp').textContent;
+        // file:// pages can't load blob: worklets in Chromium, http(s) pages may refuse data: in some browsers: try both
+        const blobUrl = () => URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
+        const dataUrl = () => 'data:application/javascript;charset=utf-8,' + encodeURIComponent(src);
+        const tries = location.protocol === 'file:' ? [dataUrl, blobUrl] : [blobUrl, dataUrl];
+        let loaded = false, lastErr = null;
+        for (const mk of tries) { try { await ctx.audioWorklet.addModule(mk()); loaded = true; break; } catch (err) { lastErr = err; } }
+        if (!loaded) throw lastErr;
+        node = new AudioWorkletNode(ctx, 'throat-processor', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
+        analyser = ctx.createAnalyser(); analyser.fftSize = 8192; analyser.smoothingTimeConstant = 0.55;
+        analyser.minDecibels = -110; analyser.maxDecibels = -10;
+        node.connect(analyser); analyser.connect(ctx.destination);
+        node.port.onmessage = onMsg;
+        node.onprocessorerror = () => showError('The audio engine stopped with an error. Reload the page.');
+        ready = true;
+        for (const s of SPECS) node.port.postMessage(s.filter ? { t: 'f', id: s.id, v: state[s.id] } : { t: 'p', id: s.id, v: state[s.id] });
+        node.port.postMessage({ t: 'p', id: 'mode', v: state.mode });
+        node.port.postMessage({ t: 'p', id: 'source', v: state.source });
+        node.port.postMessage({ t: 'f', id: 'vowelOn', v: state.vowelOn }); node.port.postMessage({ t: 'f', id: 'vowel', v: state.vowel });
+        node.port.postMessage({ t: 'f', id: 'lpOn', v: state.lpOn });
+        while (queue.length) node.port.postMessage(queue.shift());
+        if (ctx.state !== 'running') await ctx.resume();
+        document.getElementById('power').classList.add('hide');
+      } catch (err) { showError('Audio could not start: ' + (err && err.message || err)); starting = null; }
+    })();
+    return starting;
+  }
+  document.getElementById('powerBtn').addEventListener('click', start);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) allOff(); });
+
+  /* ---------- knobs ---------- */
+  const knobs = {};
+  function toNorm(s, v) {
+    if (s.log) return Math.log(v / s.min) / Math.log(s.max / s.min);
+    const n = (v - s.min) / (s.max - s.min);
+    return s.curve ? Math.pow(n, 1 / s.curve) : n;
+  }
+  function fromNorm(s, n) {
+    n = Math.min(1, Math.max(0, n));
+    let v = s.log ? s.min * Math.pow(s.max / s.min, n) : s.min + (s.max - s.min) * (s.curve ? Math.pow(n, s.curve) : n);
+    if (s.step) v = Math.round(v / s.step) * s.step;
+    return v;
+  }
+  function makeKnob(s) {
+    const el = document.createElement('div');
+    el.className = 'knob' + (s.big ? ' big' : '');
+    el.innerHTML = '<div class="dial" tabindex="0" role="slider"><div class="cap"></div><div class="ptr"></div></div><span class="name"></span><span class="val"></span>';
+    const dial = el.firstChild, valEl = el.lastChild;
+    el.children[1].textContent = s.name;
+    dial.setAttribute('aria-label', s.name);
+    if (s.c) dial.style.setProperty('--c', s.c);
+    const host = document.getElementById(s.g);
+    const seg = host.querySelector('.segwrap');
+    if (seg && s.id !== 'volume') host.insertBefore(el, seg); else host.appendChild(el);
+    const k = { s, dial, valEl, norm: toNorm(s, s.def) };
+    k.set = (n, quiet) => {
+      k.norm = Math.min(1, Math.max(0, n));
+      const v = fromNorm(s, k.norm);
+      if (s.step) k.norm = toNorm(s, v);
+      state[s.id] = v;
+      const nn = k.norm;
+      let a0 = 0, a1 = nn;
+      if (s.bipolar) { a0 = Math.min(nn, 0.5); a1 = Math.max(nn, 0.5); }
+      dial.style.setProperty('--a0', (a0 * 270) + 'deg');
+      dial.style.setProperty('--a1', (a1 * 270) + 'deg');
+      dial.querySelector('.ptr').style.transform = 'rotate(' + (-135 + nn * 270) + 'deg)';
+      const txt = s.fmt(v);
+      valEl.textContent = txt;
+      dial.setAttribute('aria-valuenow', v.toFixed(3));
+      dial.setAttribute('aria-valuetext', txt);
+      if (!quiet) send(s.filter ? { t: 'f', id: s.id, v } : { t: 'p', id: s.id, v });
+    };
+    let dragY = null, startN = 0;
+    dial.addEventListener('pointerdown', e => { dial.setPointerCapture(e.pointerId); dragY = e.clientY; startN = k.norm; dial.focus(); e.preventDefault(); });
+    dial.addEventListener('pointermove', e => {
+      if (dragY === null) return;
+      const d = (dragY - e.clientY) * (e.shiftKey ? 0.0008 : 0.005);
+      k.set(startN + d);
+      if (e.shiftKey) { dragY = e.clientY; startN = k.norm; }
+    });
+    const end = () => { dragY = null; };
+    dial.addEventListener('pointerup', end); dial.addEventListener('pointercancel', end);
+    dial.addEventListener('dblclick', () => k.set(toNorm(s, s.def)));
+    dial.addEventListener('wheel', e => { e.preventDefault(); k.set(k.norm - Math.sign(e.deltaY) * (e.shiftKey ? 0.005 : 0.03)); }, { passive: false });
+    dial.addEventListener('keydown', e => {
+      const st = s.step ? 1 / ((s.max - s.min) / s.step) : (e.shiftKey ? 0.005 : 0.02);
+      let used = true;
+      if (e.key === 'ArrowUp' || e.key === 'ArrowRight') k.set(k.norm + st);
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') k.set(k.norm - st);
+      else if (e.key === 'Home') k.set(0);
+      else if (e.key === 'End') k.set(1);
+      else used = false;
+      if (used) { e.preventDefault(); e.stopPropagation(); }
+    });
+    k.set(k.norm, true);
+    knobs[s.id] = k;
+  }
+  SPECS.forEach(makeKnob);
+
+  function makeSeg(id, param, def) {
+    const seg = document.getElementById(id), btns = [...seg.querySelectorAll('button')];
+    const set = v => { state[param] = v; btns.forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === v))); };
+    btns.forEach(b => b.addEventListener('click', () => { set(+b.dataset.v); send({ t: 'p', id: param, v: +b.dataset.v }); if (param === 'mode') { releaseKeys(); updateGlide(); } }));
+    set(def);
+  }
+  makeSeg('segMode', 'mode', 0);
+  makeSeg('segSrc', 'source', 0);
+  function updateGlide() { knobs.glide.dial.parentNode.classList.toggle('dim', state.mode === 1); knobs.glide.dial.title = state.mode === 1 ? 'Glide works in Mono only' : ''; }
+  updateGlide();
+
+  // test filter switches
+  const vOn = document.getElementById('vowelOn'), vSl = document.getElementById('vowel'), lOn = document.getElementById('lpOn');
+  state.vowelOn = false; state.vowel = 0; state.lpOn = false;
+  const dimAids = () => { document.getElementById('vowelWrap').classList.toggle('dim', !vOn.checked); document.getElementById('g-lp').classList.toggle('dim', !lOn.checked); };
+  vOn.addEventListener('change', () => { state.vowelOn = vOn.checked; send({ t: 'f', id: 'vowelOn', v: vOn.checked ? 1 : 0 }); dimAids(); });
+  lOn.addEventListener('change', () => { state.lpOn = lOn.checked; send({ t: 'f', id: 'lpOn', v: lOn.checked ? 1 : 0 }); dimAids(); });
+  vSl.addEventListener('input', () => { state.vowel = +vSl.value; send({ t: 'f', id: 'vowel', v: +vSl.value }); });
+  vSl.addEventListener('keydown', e => e.stopPropagation());
+  dimAids();
+
+  /* ---------- PC keyboard as a MIDI keyboard (Ableton layout) ---------- */
+  const KEYMAP = { KeyA: 0, KeyW: 1, KeyS: 2, KeyE: 3, KeyD: 4, KeyF: 5, KeyT: 6, KeyG: 7, KeyY: 8, KeyH: 9, KeyU: 10, KeyJ: 11,
+                   KeyK: 12, KeyO: 13, KeyL: 14, KeyP: 15, Semicolon: 16 };
+  const KEYCAP = { KeyA: 'A', KeyW: 'W', KeyS: 'S', KeyE: 'E', KeyD: 'D', KeyF: 'F', KeyT: 'T', KeyG: 'G', KeyY: 'Y', KeyH: 'H', KeyU: 'U', KeyJ: 'J',
+                   KeyK: 'K', KeyO: 'O', KeyL: 'L', KeyP: 'P', Semicolon: ';' };
+  const VELS = [1, 20, 40, 60, 80, 100, 127];
+  let octave = 2, velIdx = 5;                 // Ableton naming: C2 = MIDI 48
+  const down = new Map();                     // source (key code or pointer) → midi note
+  const sounding = new Map();                 // midi note → count of sources holding it
+  const noteName = m => ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'][m % 12] + (Math.floor(m / 12) - 2);
+  function baseNote() { return (octave + 2) * 12; }
+  function noteOn(srcKey, midi) {
+    if (down.has(srcKey) || midi < 0 || midi > 127) return;
+    start();
+    down.set(srcKey, midi);
+    sounding.set(midi, (sounding.get(midi) || 0) + 1);
+    send({ t: 'on', n: midi, v: VELS[velIdx] });
+    paintKeys();
+  }
+  function noteOff(srcKey) {
+    if (!down.has(srcKey)) return;
+    const midi = down.get(srcKey); down.delete(srcKey);
+    const c = (sounding.get(midi) || 1) - 1;
+    if (c <= 0) { sounding.delete(midi); send({ t: 'off', n: midi }); } else sounding.set(midi, c);
+    paintKeys();
+  }
+  function releaseKeys() { down.clear(); sounding.clear(); paintKeys(); }
+  function allOff() { releaseKeys(); send({ t: 'panic' }); }
+  document.getElementById('panic').addEventListener('click', allOff);
+  window.addEventListener('blur', allOff);
+
+  window.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.code in KEYMAP) { e.preventDefault(); if (!e.repeat) noteOn(e.code, baseNote() + KEYMAP[e.code]); return; }
+    if (e.repeat) return;
+    if (e.code === 'KeyZ') { octave = Math.max(-2, octave - 1); }
+    else if (e.code === 'KeyX') { octave = Math.min(8, octave + 1); }
+    else if (e.code === 'KeyC') { velIdx = Math.max(0, velIdx - 1); }
+    else if (e.code === 'KeyV') { velIdx = Math.min(VELS.length - 1, velIdx + 1); }
+    else return;
+    e.preventDefault();
+    updateKeyLabels();
+  });
+  window.addEventListener('keyup', e => { if (e.code in KEYMAP) noteOff(e.code); });
+
+  // on-screen keys
+  const keysEl = document.getElementById('keys');
+  const keyEls = [];
+  const codes = Object.keys(KEYMAP);
+  const whiteSemis = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16];
+  const isBlack = s => [1, 3, 6, 8, 10, 13, 15].includes(s);
+  codes.forEach(code => {
+    const semi = KEYMAP[code], el = document.createElement('div');
+    el.className = 'key ' + (isBlack(semi) ? 'b' : 'w');
+    el.dataset.semi = semi;
+    el.innerHTML = '<span class="c"></span>' + KEYCAP[code];
+    if (isBlack(semi)) {
+      const left = whiteSemis.filter(w => w < semi).length;
+      el.style.left = 'calc(' + (left * 10) + '% - 3.2%)'; el.style.width = '6.4%';
+    } else {
+      const idx = whiteSemis.indexOf(semi);
+      el.style.left = (idx * 10) + '%'; el.style.width = '10%';
+    }
+    const pid = 'ptr' + semi;
+    el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); noteOn(pid, baseNote() + semi); e.preventDefault(); });
+    const up = () => noteOff(pid);
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('lostpointercapture', up);
+    keysEl.appendChild(el);
+    keyEls.push(el);
+  });
+  function paintKeys() {
+    const b = baseNote();
+    for (const el of keyEls) el.classList.toggle('on', sounding.has(b + +el.dataset.semi));
+  }
+  function updateKeyLabels() {
+    const b = baseNote();
+    for (const el of keyEls) { const s = +el.dataset.semi; el.firstChild.textContent = (s % 12 === 0) ? noteName(b + s) : ''; }
+    document.getElementById('roOct').textContent = noteName(b);
+    document.getElementById('roVel').textContent = VELS[velIdx];
+    paintKeys();
+  }
+  updateKeyLabels();
+
+  /* ---------- live view ---------- */
+  const glot = document.getElementById('glot'), spec = document.getElementById('spec');
+  const gx = glot.getContext('2d'), sx = spec.getContext('2d');
+  let viz = null, vizAt = 0, scale = 0.2, voices = 0;
+  const ro = { f0: document.getElementById('roF0'), rd: document.getElementById('roRd'), oq: document.getElementById('roOq'), vo: document.getElementById('roVo') };
+  function onMsg(e) {
+    const m = e.data;
+    if (m.t === 'viz') {
+      viz = m; vizAt = performance.now(); voices = m.voices;
+      ro.f0.textContent = m.f0 ? m.f0.toFixed(1) + ' Hz' : '—';
+      ro.rd.textContent = m.rd.toFixed(2);
+      ro.oq.textContent = m.oq.toFixed(2);
+    } else if (m.t === 'stat') voices = m.voices;
+    ro.vo.textContent = voices + (state.mode === 1 ? '/8' : '');
+  }
+  function fit(c) {
+    const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    const w = Math.round(r.width * d), h = Math.round(r.height * d);
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+    return d;
+  }
+  function drawGlot() {
+    const d = fit(glot), W = glot.width, H = glot.height, mid = H * 0.55;
+    gx.clearRect(0, 0, W, H);
+    gx.strokeStyle = 'rgba(143,255,136,.08)'; gx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) { gx.beginPath(); gx.moveTo(0, H * i / 4); gx.lineTo(W, H * i / 4); gx.stroke(); }
+    gx.beginPath(); gx.moveTo(W / 2, 0); gx.lineTo(W / 2, H); gx.stroke();
+    document.getElementById('glotLbl').textContent = state.source ? 'FLOW DERIVATIVE' : 'GLOTTAL FLOW';
+    const fresh = viz && performance.now() - vizAt < 400 && voices > 0;
+    if (!fresh) {
+      gx.strokeStyle = 'rgba(224,58,62,.35)'; gx.lineWidth = 2 * d; gx.beginPath(); gx.moveTo(0, mid); gx.lineTo(W, mid); gx.stroke();
+      return;
+    }
+    const g = viz.g, n = viz.n, N = g.length;
+    let mx = 0; for (let i = 0; i < N; i++) mx = Math.max(mx, Math.abs(g[i]), n[i] * 0.35);
+    scale += ((mx > 1e-4 ? mx : scale) - scale) * (mx > scale ? 0.5 : 0.06);
+    const ys = H * 0.4 / Math.max(scale, 1e-3);
+    const X = i => i / (N - 1) * W;
+    // breath: a band riding on the glottal signal
+    gx.fillStyle = 'rgba(224,58,62,.22)';
+    gx.beginPath();
+    for (let i = 0; i < N; i++) gx.lineTo(X(i), mid - (g[i] + n[i] * 0.35) * ys);
+    for (let i = N - 1; i >= 0; i--) gx.lineTo(X(i), mid - (g[i] - n[i] * 0.35) * ys);
+    gx.closePath(); gx.fill();
+    gx.strokeStyle = '#e03a3e'; gx.lineWidth = 2 * d; gx.shadowColor = '#e03a3e'; gx.shadowBlur = 8 * d;
+    gx.beginPath();
+    for (let i = 0; i < N; i++) { const y = mid - g[i] * ys; i ? gx.lineTo(X(i), y) : gx.moveTo(X(i), y); }
+    gx.stroke(); gx.shadowBlur = 0;
+  }
+  let fbuf = null;
+  function drawSpec() {
+    const d = fit(spec), W = spec.width, H = spec.height;
+    sx.clearRect(0, 0, W, H);
+    const fmin = 50, fmax = 16000, lx = f => Math.log(f / fmin) / Math.log(fmax / fmin) * W;
+    sx.strokeStyle = 'rgba(143,255,136,.08)'; sx.lineWidth = 1; sx.fillStyle = 'rgba(143,255,136,.45)'; sx.font = (9 * d) + 'px Monaco, monospace'; sx.textAlign = 'center';
+    for (const f of [100, 200, 500, 1000, 2000, 5000, 10000]) {
+      const x = lx(f); sx.beginPath(); sx.moveTo(x, 0); sx.lineTo(x, H); sx.stroke();
+      if (f === 100 || f === 1000 || f === 10000) sx.fillText(f >= 1000 ? (f / 1000) + 'k' : f, x, H - 4 * d);
+    }
+    if (!analyser) return;
+    if (!fbuf) fbuf = new Float32Array(analyser.frequencyBinCount);
+    analyser.getFloatFrequencyData(fbuf);
+    const binHz = ctx.sampleRate / analyser.fftSize, lo = analyser.minDecibels, hi = analyser.maxDecibels;
+    const y = v => H - (Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo) * (H - 14 * d) - 12 * d;
+    sx.beginPath(); sx.moveTo(0, H);
+    let px = -1;
+    for (let x = 0; x <= W; x += d) {
+      const f0 = fmin * Math.pow(fmax / fmin, x / W), f1 = fmin * Math.pow(fmax / fmin, (x + d) / W);
+      let b0 = Math.floor(f0 / binHz), b1 = Math.max(b0 + 1, Math.ceil(f1 / binHz)), m = -200;
+      for (let b = b0; b < b1 && b < fbuf.length; b++) m = Math.max(m, fbuf[b]);
+      sx.lineTo(x, y(m)); px = x;
+    }
+    sx.lineTo(px, H); sx.closePath();
+    const grd = sx.createLinearGradient(0, 0, 0, H); grd.addColorStop(0, 'rgba(224,58,62,.55)'); grd.addColorStop(1, 'rgba(224,58,62,.05)');
+    sx.fillStyle = grd; sx.fill();
+    sx.strokeStyle = '#e03a3e'; sx.lineWidth = 1.2 * d; sx.stroke();
+  }
+  const slow = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let last = 0;
+  function frame(t) {
+    if (!slow || t - last > 250) { last = t; drawGlot(); drawSpec(); }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
